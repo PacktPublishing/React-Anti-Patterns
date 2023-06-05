@@ -1,0 +1,37 @@
+- src/
+  - features/
+    - Home/
+      - components/
+        - Banner.tsx
+        - ProductList.tsx
+        - ...
+      - containers/
+        - FeaturedProductsContainer.tsx
+        - ...
+      - pages/
+        - HomePage.tsx
+      - services/
+        - productService.ts
+      - types/
+        - productTypes.ts
+      - utils/
+        - helpers.ts
+      - Home.tsx
+      - index.ts
+    - Cart/
+    - ProductDetails/
+    - Checkout/
+    - Profile/
+    - ...
+  - shared/
+    - components/
+    - containers/
+    - services/
+    - types/
+    - utils/
+    - ...
+  - api/
+  - store/
+  - router/
+  - App.tsx
+

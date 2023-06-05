@@ -98,44 +98,7 @@ In the following of the chapter, we'll use online shopping application as exampl
 
 With a feature-based architecture in the context of online shopping, you can organize your files and folders as follows:
 
-```
-src/
-├── features/
-│   ├── Home/
-│   │   ├── components/
-│   │   │   ├── Banner.tsx
-│   │   │   ├── ProductList.tsx
-│   │   │   └── ...
-│   │   ├── containers/
-│   │   │   ├── FeaturedProductsContainer.tsx
-│   │   │   └── ...
-│   │   ├── pages/
-│   │   │   └── HomePage.tsx
-│   │   ├── services/
-│   │   │   └── productService.ts
-│   │   ├── types/
-│   │   │   └── productTypes.ts
-│   │   ├── utils/
-│   │   │   └── helpers.ts
-│   │   ├── Home.tsx
-│   │   └── index.ts
-│   ├── Cart/
-│   ├── ProductDetails/
-│   ├── Checkout/
-│   ├── Profile/
-│   └── ...
-├── shared/
-│   ├── components/
-│   ├── containers/
-│   ├── services/
-│   ├── types/
-│   ├── utils/
-│   └── ...
-├── api/
-├── store/
-├── router/
-└── App.tsx
-```
+![Figure 3-2. Feature-based structure](images/feature-based.png)
 
 In this structure:
 - The `features` directory represents different features of the application, such as Home, Cart, ProductDetails, Checkout, Profile, etc.
@@ -159,38 +122,7 @@ In this structure:
 
 With a component-based architecture in the context of online shopping, you can organize your files and folders as follows:
 
-```
-src/
-├── components/
-│   ├── ProductList/
-│   │   ├── ProductList.tsx
-│   │   ├── ProductCard/
-│   │   │   ├── ProductCard.tsx
-│   │   │   ├── AddToCartButton/
-│   │   │   │   └── AddToCartButton.tsx
-│   ├── ShoppingCart/
-│   │   ├── ShoppingCart.tsx
-│   │   ├── CartItem/
-│   │   │   ├── CartItem.tsx
-│   │   │   ├── QuantitySelector/
-│   │   │   │   └── QuantitySelector.tsx
-│   ├── UserAuth/
-│   │   ├── Login/
-│   │   │   ├── LoginForm.tsx
-│   │   ├── SignUp/
-│   │   │   ├── SignUpForm.tsx
-│   ├── Payment/
-│   │   ├── PaymentForm.tsx
-├── routes/
-│   ├── AppRouter.tsx
-│   └── routes.tsx
-├── api/
-│   ├── products.ts
-│   ├── cart.ts
-│   ├── auth.ts
-│   ├── payment.ts
-└── index.tsx
-```
+![Figure 3-3. Component-based structure](images/component-based.png)
 
 In this structure:
 - Components: The `components` folder contains individual components related to various features of the online shopping application. Each component is organized into its own folder, which may contain child components as necessary. 
@@ -228,59 +160,12 @@ Here's how the Atomic Design methodology categorizes UI components:
 
 5. **Pages**: Pages represent complete user interface screens that are composed of templates, organisms, molecules, and atoms. They represent the final output visible to the user.
 
-![Figure 3-3. Atomic Design](images/atomic-design.png)
+![Figure 3-4. Atomic Design](images/atomic-design.png)
 
 
 With a Atomic Design architecture in the context of online shopping, you can organize your files and folders as follows:
 
-```
-src/
-├── api/
-│   └── products.ts
-├── components/
-│   ├── atoms/
-│   │   ├── Button/
-│   │   ├── Input/
-│   │   ├── Icon/
-│   │   └── ...
-│   ├── molecules/
-│   │   ├── ProductCard/
-│   │   ├── ShoppingCart/
-│   │   ├── ProductFilter/
-│   │   └── ...
-│   ├── organisms/
-│   │   ├── Header/
-│   │   ├── Footer/
-│   │   ├── CheckoutForm/
-│   │   └── ...
-│   ├── templates/
-│   │   ├── HomePage/
-│   │   ├── ProductDetailPage/
-│   │   ├── CheckoutPage/
-│   │   └── ...
-│   └── pages/
-│       ├── Home/
-│       ├── ProductDetail/
-│       ├── Checkout/
-│       └── ...
-├── hooks/
-│   ├── useProducts/
-│   ├── useCart/
-│   ├── useAuth/
-│   └── ...
-├── context/
-│   ├── CartContext.tsx
-│   └── AuthContext.tsx
-├── views/
-│   ├── HomeView.tsx
-│   ├── ProductDetailView.tsx
-│   ├── CheckoutView.tsx
-│   └── ...
-├── routes/
-│   ├── index.tsx
-│   └── routes.tsx
-└── App.tsx
-```
+![Figure 3-5. Atomic Design structure](images/atomic-design-structure.png)
 
 In this structure, the "atoms," "molecules," "organisms," "templates," and "pages" directories represent the different levels of component composition and abstraction. The "api" directory contains the API-related files for making API calls. The "hooks" directory holds custom hooks for managing state and other functionalities. The "context" directory includes context providers for managing global state. The "views" directory contains the individual views that render the components. The "routes" directory handles the routing configuration.
 
@@ -301,42 +186,7 @@ In this structure, the "atoms," "molecules," "organisms," "templates," and "page
 
 To structure a React application with the MVVM (Model-View-ViewModel) architecture in the context of online shopping, you can organize your files and folders as follows:
 
-```
-src/
-├── components/
-│   ├── Cart/
-│   │   ├── CartItem.tsx
-│   │   ├── CartTotal.tsx
-│   │   └── ...
-│   ├── Product/
-│   │   ├── ProductCard.tsx
-│   │   ├── ProductList.tsx
-│   │   └── ...
-│   ├── Shared/
-│   │   ├── Button.tsx
-│   │   ├── Input.tsx
-│   │   └── ...
-│   └── ...
-├── models/
-│   ├── CartItemModel.ts
-│   ├── ProductModel.ts
-│   └── ...
-├── viewmodels/
-│   ├── useCartViewModel.ts
-│   ├── useProductListViewModel.ts
-│   └── ...
-├── services/
-│   ├── ApiService.ts
-│   └── ...
-├── views/
-│   ├── CartView.tsx
-│   ├── ProductListView.tsx
-│   └── ...
-├── routers/
-│   ├── AppRouter.tsx
-│   └── ...
-└── App.tsx
-```
+![Figure 3-6. MVVM structure](images/mvvm.png)
 
 In this structure:
 - The `components` directory contains reusable UI components, organized by their respective features.
@@ -495,39 +345,7 @@ As the application grows larger, it may be beneficial to extract the `components
 
 By structuring the project in this way, you achieve a modular and organized codebase that facilitates code reuse, separation of concerns, and scalability. Each directory represents a specific aspect of the application, making it easier to locate and manage code related to that particular functionality.
 
-```
-├── api
-├── components
-│   ├── Accordion
-│   ├── Button
-│   ├── GenericCard
-│   ├── Modal
-│   ├── Offer
-│   │   └── SpecialOffer
-│   └── StackView
-├── context
-├── hooks
-├── mocks
-│   ├── graphql
-│   └── rest
-└── pages
-    ├── Address
-    │   ├── AddressList
-    │   └── Store
-    ├── Home
-    ├── Login
-    │   └── hooks
-    ├── Order
-    │   └── hooks
-    ├── Payment
-    │   └── hooks
-    ├── Product
-    ├── Profile
-    │   ├── Coupon
-    │   ├── context
-    │   └── hooks
-    └── SignUp
-```
+![Figure 3-7. A mixed structure](images/mixed.png)
 
 When your application grows this large, it might be a good idea to extract the `components` folder entirely as a shared library hosted on either your internal registry or `npmjs`. It is like an internal design system.
 

@@ -1,0 +1,35 @@
+- src
+  - components
+    - Cart
+      - CartItem.tsx
+      - CartTotal.tsx
+      - ...
+    - Product
+      - ProductCard.tsx
+      - ProductList.tsx
+      - ...
+    - Shared
+      - Button.tsx
+      - Input.tsx
+      - ...
+    - ...
+  - models
+    - CartItemModel.ts
+    - ProductModel.ts
+    - ...
+  - viewmodels
+    - useCartViewModel.ts
+    - useProductListViewModel.ts
+    - ...
+  - services
+    - ApiService.ts
+    - ...
+  - views
+    - CartView.tsx
+    - ProductListView.tsx
+    - ...
+  - routers
+    - AppRouter.tsx
+    - ...
+  - App.tsx
+

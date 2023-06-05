@@ -1,0 +1,33 @@
+- src
+    - api
+    - components
+      - Accordion
+      - Button
+      - GenericCard
+      - Modal
+      - Offer
+        - SpecialOffer
+      - StackView
+    - context
+    - hooks
+    - mocks
+      - graphql
+      - rest
+    - pages
+      - Address
+        - AddressList
+        - Store
+      - Home
+      - Login
+        - hooks
+      - Order
+        - hooks
+      - Payment
+        - hooks
+      - Product
+      - Profile
+        - Coupon
+        - context
+        - hooks
+      - SignUp
+
