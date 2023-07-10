@@ -18,7 +18,7 @@ The problem with having a less-structured project is that it can lead to several
 
 Before proposing a recommended project structure, let's take a look at the typical components of a modern frontend project. Understanding these components will provide a foundation for designing an effective project structure.
 
-## Front-end applications are complex
+# Front-end applications are complex
 
 In a medium-sized front-end project, you may be surprised by the multitude of components required for its successful implementation. Alongside the core features, there are numerous other elements that contribute to the project's functionality. The folder structure of a React project provides a glimpse into the various aspects you'll need to manage within a typical React codebase:
 
@@ -59,7 +59,7 @@ In a medium-sized front-end project, you may be surprised by the multitude of co
 
 These diverse components collectively form the foundation of a typical React codebase, highlighting the complexity and breadth of considerations involved in medium-sized front-end projects.
 
-### Open Up A Feature folder
+## Open Up A Feature folder
 
 Exploring each feature folder can be an enjoyable experience, as it unravels a variety of elements:
 
@@ -78,7 +78,7 @@ Consistency is paramount when it comes to naming and structuring code elements. 
 
 By establishing and following consistent organizational practices, developers can streamline code navigation and enhance the maintainability of the project.
 
-## Common structures in React Applications
+# Common structures in React Applications
 
 There are many different ways of orgainising a large React applicaiton, here we'll have a quick look at the most common four strucutres, and in the following sections we'll dive into each to discuss more details.
 
@@ -94,7 +94,7 @@ Each structure has its own set of benefits and drawbacks, and the choice depends
 
 In the following of the chapter, we'll use online shopping application as example since it's relatively complicated and you should have some familiarity around that domain already. The application also contains elements like API calls, router and state management. 
 
-### Feature-based Strucutre
+## Feature-based Strucutre
 
 With a feature-based architecture in the context of online shopping, you can organize your files and folders as follows:
 
@@ -109,16 +109,16 @@ In this structure:
 - The `router` directory contains routing configuration and related components.
 - The `App.tsx` file serves as the entry point of the application.
 
-#### Benefits
+### Benefits
 - Clear separation of concerns: Each feature has its own folder, making it easier to locate and modify related code.
 - Modularity: Features are self-contained, allowing for easier testing, maintenance, and reuse.
 - Scalability: New features can be added without directly impacting existing code.
 - Team collaboration: Developers can work on different features concurrently with minimal conflicts.
 
-#### Drawbacks
+### Drawbacks
 - Potential duplication: Features may share similar components or logic, leading to some duplication. Careful planning and refactoring can help mitigate this.
 
-### Component-based Structure
+## Component-based Structure
 
 With a component-based architecture in the context of online shopping, you can organize your files and folders as follows:
 
@@ -130,19 +130,19 @@ In this structure:
 - API Calls: The `api` folder contains separate files for different API domains or functionalities. These files, such as `products.ts`, `cart.ts`, `auth.ts`, and `payment.ts`, handle the API calls related to their respective domains.
 - State Management: The example assumes the use of a state management library like Redux or React Context API for managing global application state.
 
-#### Benefits
+### Benefits
 
 - Modularity: The component-based structure promotes modularity by organizing components into separate files and folders based on their functionality. This enhances code maintainability and reusability.
 - Separation of Concerns: Each component focuses on its specific functionality, leading to clearer code and easier debugging. The separation of concerns improves code readability and maintainability.
 - Code Reusability: With components organized in a modular structure, it becomes easier to reuse components across the application or in future projects, leading to improved development efficiency.
 - TypeScript Support: Using TypeScript provides static typing and better tooling support, catching errors at compile-time and improving overall code quality.
 
-#### Drawbacks
+### Drawbacks
 
 - Project Complexity: As the project grows, maintaining a complex component structure can become challenging. It requires careful planning and adherence to best practices to avoid component sprawl and keep the structure manageable.
 - Learning Curve: The initial learning curve for component-based development and TypeScript may be steeper for developers who are new to these concepts. However, the benefits gained in terms of code organization and maintainability outweigh the initial learning
 
-### Atomic Design Structure
+## Atomic Design Structure
 
 [Atomic Design](https://bradfrost.com/blog/post/atomic-web-design/) is a methodology for designing and organizing user interfaces. It emphasizes the construction of user interfaces by breaking them down into small, reusable components called atoms, which are combined to form molecules, organisms, templates, and pages.
 
@@ -169,7 +169,7 @@ With a Atomic Design architecture in the context of online shopping, you can org
 
 In this structure, the "atoms," "molecules," "organisms," "templates," and "pages" directories represent the different levels of component composition and abstraction. The "api" directory contains the API-related files for making API calls. The "hooks" directory holds custom hooks for managing state and other functionalities. The "context" directory includes context providers for managing global state. The "views" directory contains the individual views that render the components. The "routes" directory handles the routing configuration.
 
-#### Benefits
+### Benefits
 
 - Reusability: Components can be easily reused across the application, promoting code efficiency.
 - Consistency: The structure encourages a consistent design language and UI patterns.
@@ -177,12 +177,12 @@ In this structure, the "atoms," "molecules," "organisms," "templates," and "page
 - Maintainability: Components are organized in a logical hierarchy, making them easier to locate and update.
 - Collaboration: The atomic design structure facilitates collaboration between designers and developers, as it provides a common language for discussing UI components.
 
-#### Drawbacks
+### Drawbacks
 - Learning curve: It may require some initial learning and adaptation to understand and implement the atomic design principles effectively.
 - Complexity: As the application grows, managing a large number of components and their relationships can become challenging.
 - Overengineering: It's important to strike a balance between component reusability and overengineering, as excessive abstraction can introduce unnecessary complexity.
 
-### MVVM Structure
+## MVVM Structure
 
 To structure a React application with the MVVM (Model-View-ViewModel) architecture in the context of online shopping, you can organize your files and folders as follows:
 
@@ -197,21 +197,21 @@ In this structure:
 - The `routers` directory houses the routing configuration and components.
 - The `App.tsx` file serves as the entry point of the application.
 
-#### Benefits
+### Benefits
 
 - Separation of concerns: The ViewModel separates the business logic from the UI components, promoting cleaner and more maintainable code.
 - Testability: The ViewModel can be easily unit tested without the need for the actual UI components.
 - Reusability: Components, models, and services can be reused across different features and views.
 - Scalability: New features and views can be added while reusing existing ViewModel and service modules.
 
-#### Drawbacks
+### Drawbacks
 
 - Complexity: Implementing the MVVM pattern may introduce additional layers of abstraction and complexity to the application, especially for smaller projects.
 - Learning curve: Developers need to understand the concepts and principles of MVVM to effectively structure and manage the application.
 
 Now that we have explored these four popular structures, let's delve into the continuous evolution of our application's structure. This ongoing process ensures that the structure remains beneficial for developers in terms of easy navigation, seamless addition of new features, and the ability to maintain scalability over time.
 
-## Keep Orgnaising Your Project Structure
+# Keep Orgnaising Your Project Structure
 
 Feature-based strucutre is always a good starting point. As the project expands and patterns of duplication start to emerge, an additional layer can be introduced to eliminate redundancy.
 
@@ -231,7 +231,7 @@ In the initial stages, organizing pages based on their features is a common appr
 
 This strategy leads to a more efficient and organized structure, enabling increased reusability and maintainability. By identifying recurring patterns and extracting shared components or utilities into separate layers, developers can enhance code consistency and minimize duplication. This approach promotes a modular and scalable architecture, allowing for easier management and future growth of the project.
 
-### First attempt
+## First attempt
 
 The initial folder structure under the `src` directory is quite straightforward and follows a feature-based approach, with each page having its own folder:
 
@@ -255,7 +255,7 @@ For example, if both the `Login` and `Order` pages require a `Button` component,
 
 By adding this extra layer, you promote reusability and maintainability in your codebase. It helps in eliminating redundancy, streamlining development efforts, and ensuring consistency throughout the application. As the project expands, this modular approach allows for easy management and scalability, making it easier to add new features or make changes without impacting the entire codebase.
 
-### One more layer
+## One more layer
 
 So you can create a `components` folder for all these reusable components and a `pages` folder for all these feature pages.
 
@@ -289,11 +289,11 @@ It's important to note that not all components need to be moved to the `componen
 
 This file structure allows for better organization, code reuse, and scalability as the project grows. It promotes maintainability by reducing redundancy and ensuring consistency across the application. Additionally, having a separate folder for hooks and contexts helps centralize related code and makes it easier to manage and maintain global state and reusable logic.
 
-### Inside a component
+## Inside a component
 
 In an individual component, there are different approaches to naming files, and each approach has its advantages and considerations. Let's explore the two approaches mentioned:
 
-#### Naming Files with `index` and Explicit Component Name:
+### Naming Files with `index` and Explicit Component Name:
 
 ```
 components/Button
@@ -305,7 +305,7 @@ components/Button
 
 In this approach, each file within the component folder has an explicit name that corresponds to the component it represents. The `index.tsx` file serves as the default export file, allowing for convenient importing of the component from the folder directly. This approach promotes clear and self-descriptive file names, making it easier to understand the purpose and content of each file. However, it can result in a long list of `index` files when browsing or searching for components in an editor or file explorer.
 
-#### Naming Files with Kebab Case:
+### Naming Files with Kebab Case:
 
 ```
 components/Button
@@ -325,7 +325,7 @@ You can use ESlint and FolderLint to ensure your team has the same naming standa
 
 For example, the image above shows that the filename should be in the kebab case and suggests changing `Button.tsx` into `button.tsx`.
 
-### The Sturcture We Have Now
+## The Sturcture We Have Now
 
 As your application grows and different types of abstractions are added, it becomes necessary to organize the project structure accordingly. The provided folder structure reflects this evolution:
 
@@ -353,7 +353,7 @@ While this structure provides a solid foundation, it's important to adapt it bas
 
 As your application evolves and new features are introduced, the existing structure may no longer fully meet your requirements. In such cases, it can be beneficial to incorporate architectural patterns like MVVM, which follows a layered approach. This allows for better separation of concerns and facilitates the management of complex features and state in a more organized manner. We'll have a in-depth discussion about using Layered Architecuture in Chapter 11.
 
-## Summary
+# Summary
 
 In this chapter, we explored the challenges that arise when managing a large React application and the importance of establishing a solid project structure. We discussed various styles of structuring a React application, including feature-based, component-based, MVVM, and atomic design. Each approach offers its own benefits and considerations, allowing developers to choose the most suitable structure for their specific project requirements.
 
