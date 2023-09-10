@@ -233,7 +233,7 @@ npm run test src/ch7
 
 There will be an error shows up in the termail, and saying that `ReferenceError: PizzaShopApp is not defined`.
 
-![Figure 7-6. The failed test](ch7/failed-first-test)
+![Figure 7-6. The failed test](ch7/failed-first-test.png)
 
 We're in the red status of the red-green-refactoring loop now. We then make the test pass by the simplest possbile code. Nothing beats a static component returns exactly "The Code Oven" at the moment. That means we can simply define a function component in the test at the moment to make the test pass:
 
