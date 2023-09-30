@@ -1,0 +1,2 @@
+The `CountryPayment` class handles payment-related calculations for different countries. It has a private field `_currencySign` to store the currency sign and another private field `algorithm` to store a rounding strategy. The constructor initializes these fields. The class exposes a getter `currencySign` to access the currency symbol and two methods `getRoundUpAmount` and `getTip`. The `getRoundUpAmount` method uses the rounding strategy to round up an amount, while `getTip` calculates the tip using the rounded-up amount.
+
