@@ -373,20 +373,16 @@ If the `interactionContext` is null, the `measure` function won't be called, and
 That would perfectly resovle the problem we have - if product want to enable the analytics, they can use Button with a context contains a `InteractionMeasurement` implementation.
 
 ```tsx
-import { useMemo } from "react";
-
 import InteractionContext from "./InteractionContext";
 import { Button } from "@xui/button";
 
 const FormApp = () => {
-  const context = useMemo(() => {
-    return {
-      measure: (e, t) => {
-        //send event and timestamp to remote
-        console.log(`sending to remote server  ${e}: ${t}`);
-      },
-    };
-  }, []);
+  const context = {
+    measure: (e, t) => {
+      //send event and timestamp to remote
+      console.log(`sending to remote server  ${e}: ${t}`);
+    },
+  };
 
   const onClick = () => {
     console.log("submit");
@@ -404,7 +400,7 @@ const FormApp = () => {
 };
 ```
 
-The `FormApp` component defines its own analytics logic in the `measure` function within the `useMemo` hook. It then passes this function to child components through the `InteractionContext.Provider`. When a `Button` inside the form is clicked, not only will the button's specific `onClick` logic be executed, but the `measure` function will also send event and timestamp data to a remote server for analytics. This setup allows for context-based analytics without tying the `Button` component to a specific implementation.
+The `FormApp` component defines its own analytics logic in `measure` function inside `context` object. It then passes this function to child components through the `InteractionContext.Provider`. When a `Button` inside the form is clicked, not only will the button's specific `onClick` logic be executed, but the `measure` function will also send event and timestamp data to a remote server for analytics. This setup allows for context-based analytics without tying the `Button` component to a specific implementation.
 
 And for users who don't want the analytics functionality, they just use the `Button` as usual:
 
@@ -426,4 +422,273 @@ const App = () => {
 
 This methodology offers exceptional flexibility and dynamism, making it invaluable for designing common components. It enhances both code reusability and system maintainability while also reducing the overall bundle size.
 
+Having that said, I woulld like to introduce another design principle I constantly use in my code, you can think of it as a special form of Single Responsibility Principle at it's core.  This principle is the Separation of Command and Query Principle, or CQRS in short.
+
 # Understainding CQRS in React
+
+The Separation of Command and Query Principle is a software design principle that suggests that methods or functions should either be commands that modify the system's state or queries that return information about the system's state, but not both.
+
+Commands (or Modifiers) are methods that perform an action or change the state of an object without returning a value. Queries, on the other hand, are methods to read an object's state without any changes. Separating commands and queries can help reduce coupling between components, making testing, maintaining, and modifying code easier. It also makes it easier to reason about the behaviour of code and can improve the overall design of a system.
+
+Although this pattern widely used in large scale like designing architecuture of systems, it works well in code level as well. I will demonstrate this in a ShoppingCart component, as that probably something you've already familiar with.
+
+```tsx
+type Item = {
+  id: string;
+  name: string;
+  price: number;
+}
+
+const ShoppingApplication = () => {
+  const [cart, setCart] = useState<Item[]>([]);
+
+  const addItemToCart = (item: Item) => {
+    setCart([...cart, item]);
+  };
+
+  const removeItemFromCart = (id: string) => {
+    setCart(cart.filter((item) => item.id !== id));
+  };
+
+  const totalPrice = cart.reduce((total, item) => total + item.price, 0);
+
+  return (
+    <div>
+      <ProductList addToCart={addItemToCart} />
+
+      <h2>Shopping Cart</h2>
+      <ul>
+        {cart.map((item) => (
+          <li key={item.id}>
+            {item.name} - {item.price}
+            <button onClick={() => removeItemFromCart(item.id)}>Remove</button>
+          </li>
+        ))}
+      </ul>
+      <p>Total Price: {totalPrice}</p>
+    </div>
+  );
+};
+```
+
+The `ShoppingApplication` component maintains a shopping cart using the `useState` hook with an array of items of type `Item`. The `addItemToCart` function adds new items to the cart, and `removeItemFromCart` removes items based on their id. The `totalPrice` is calculated as the sum of all item prices in the cart. 
+
+The component renders a list of items in the cart, along with their total price. Each item has a "Remove" button that calls `removeItemFromCart` when clicked. A `ProductList` component is also rendered, and it receives `addItemToCart` as a prop for adding products to the cart.
+
+The above code appears to be okay at first glance, but it contains some subtle issues. One problem is that when multiple identical products are added to the cart, the keys will overlap, triggering React's warning about unique keys. Additionally, if you click the "Remove" button in this situation, it will delete all instances of that product from the cart, which is far from ideal and leads to a poor user experience.
+
+To fix the issue, we need to introduce a `uniqKey` to product type (by adding a optional field `uniqKey` in the type `Item`), and we need to generate it before an item is inserted into `cart` array, and also need to remove item by `uniqKey` instead of by `id`:
+
+```tsx
+const addItemToCart = (item: Item) => {
+  setCart([...cart, { ...item, uniqKey: `${item.id}-${Date.now()}` }]);
+};
+
+const removeItemFromCart = (key: string) => {
+  setCart(cart.filter((item) => item.uniqKey !== key));
+};
+```
+
+And we also need to update how the `cart`s is rendered in TSX:
+
+```tsx
+<h2>Shopping Cart</h2>
+<ul>
+  {cart.map((item) => (
+    <li key={item.uniqKey}>
+      {item.name} - {item.price}
+      <button onClick={() => removeItemFromCart(item.uniqKey)}>
+        Remove
+      </button>
+    </li>
+  ))}
+</ul>
+```
+
+While the code is technically sound and sufficiently straightforward for its current scope, as we expand the `ShoppingApplication` component with more states and calculations, applying the CQRS principle could provide a structured way to keep everything organized.
+
+## Implementing CQRS with context and useReducer
+
+Firstly, let's introduce a new hook `useReducer`. The `useReducer` hook in React is used for state management in functional components. It is particularly useful when the next state depends on the previous one or when you have complex state logic. The `useReducer` hook takes two arguments: a reducer function and an initial state. It returns the current state and a dispatch method to trigger updates.
+
+A reducer function receives the current state and an action object, which contains information on how to update the state. The function should return the new state based on the action type and payload.
+
+Let's define a reducer function for our `ShoppingApplication`:
+
+```tsx
+type ShoppingCartState = {
+  items: Item[];
+  totalPrice: number;
+};
+
+type ActionType = {
+  type: string;
+  payload: Item;
+};
+
+const shoppingCartReducer = (
+  state: ShoppingCartState = initState,
+  action: ActionType
+) => {
+  switch (action.type) {
+    case "ADD_ITEM": {
+      const item = {
+        ...action.payload,
+        uniqKey: `${action.payload.id}-${Date.now()}`,
+      };
+      return { ...state, items: [...state.items, item] };
+    }
+
+    case "REMOVE_ITEM":
+      const newItems = state.items.filter(
+        (item) => item.uniqKey !== action.payload.uniqKey
+      );
+      return { ...state, items: newItems };
+    default:
+      return state;
+  }
+};
+```
+
+The shopping cart reducer is a function that takes two arguments: the current state and an action. The state is of type `ShoppingCartState`, which includes an array of `items` and a `totalPrice`. The action is of type `ActionType`, which includes a `type` string to identify the action and a `payload` containing an `Item` object.
+
+Inside the reducer, a `switch` statement is used to determine what action is being dispatched. The "ADD_ITEM" case adds a new item to the state's `items` array. This item is given a unique key, `uniqKey`, to differentiate it from identical items. The "REMOVE_ITEM" case removes an item from the `items` array based on this unique key.
+
+By using this structure, the reducer provides a predictable way to manage the shopping cart's state in response to different actions. Note there is nothing fancy here in this reducer function, we could test the reducer with the following code:
+
+```tsx
+
+const item = {
+  id: "p1",
+  name: "iPad",
+  price: 666,
+};
+
+let x = shoppingCartReducer(initState, {
+  type: "ADD_ITEM",
+  payload: item,
+});
+
+console.log(x);
+```
+
+And we would get something like (obviously your uniqKey would be different from mine as it's generated by the time an item is added):
+
+```tsx
+{
+    "items": [
+        {
+            "id": "p1",
+            "name": "iPad",
+            "price": 666,
+            "uniqKey": "p1-1696059737801"
+        }
+    ],
+    "totalPrice": 0
+}
+```
+
+## Using the reducer function
+
+Let's see how we can use reducer function to implement the CQRS to simplify our code. Firstly we'll need a context to manage the cart state, and also expose query functions for components to use:
+
+```tsx
+import React, { createContext, useContext, useReducer } from "react";
+import { Item } from "./type";
+
+type ShoppingCartContextType = {
+  items: Item[];
+  addItem: (item: Item) => void;
+  removeItem: (item: Item) => void;
+};
+
+const ShoppingCartContext = createContext<ShoppingCartContextType | null>(null);
+
+export const ShoppingCartProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const [state, dispatch] = useReducer(shoppingCartReducer, {
+    items: [],
+    totalPrice: 0,
+  });
+
+  const addItem = (item: Item) => {
+    dispatch({type: ADD_ITEM, payload: item});
+  };
+
+  const removeItem = (item: Item) => {
+    dispatch({type: REMOVE_ITEM, payload: item});
+  };
+
+  return (
+    <ShoppingCartContext.Provider value={{items: state.items, addItem, removeItem}}>
+      {children}
+    </ShoppingCartContext.Provider>
+  );
+};
+```
+
+The code creates a React context for managing a shopping cart. Inside `ShoppingCartProvider`, it uses the `useReducer` hook to handle cart actions. Two functions, `addItem` and `removeItem`, dispatch actions to modify the cart. The provider component makes the cart state and these functions available to its child components via the `ShoppingCartContext`. This allows any nested components to interact with the shopping cart.
+
+Note `addItem` and `removeItem` are two command functions in CQRS principle, which only change the state without returning any data. If we want to get the data, we can define a query function.
+
+```tsx
+export const useTotalPrice = () => {
+  const context = useContext<ShoppingCartContextType>(
+    ShoppingCartContext
+  );
+
+  const {items} = context;
+
+  return items.reduce((acc, item) => acc + item.price, 0);
+};
+```
+
+Here we define a custom hook called `useTotalPrice` that calculates the total price of items in a shopping cart. It uses the React `useContext` hook to access the shopping cart data from `ShoppingCartContext`. It then uses `reduce` method to sum up the prices of all the items in the cart, starting with an initial value of 0.
+
+And for the `ShoppingApplication` component, we can simply wrap the `ProductList` and `ShoppingCart` inside the `ShoppingCartContext` we just created:
+
+```tsx
+const ShoppingApplication = () => {
+  const context = useContext(ShoppingCartContext);
+  const { items, addItem, removeItem } = context;
+  const totalPrice = useTotalPrice();
+
+  return (
+    <div>
+      <ProductList addToCart={addItem} />
+
+      <h2>Shopping Cart</h2>
+      <ul>
+        {items.map((item) => (
+          <li key={item.uniqKey}>
+            {item.name} - {item.price}
+            <button onClick={() => removeItem(item)}>Remove</button>
+          </li>
+        ))}
+      </ul>
+      <p>Total Price: {totalPrice}</p>
+    </div>
+  );
+};
+```
+
+The `ShoppingApplication` component serves as the main interface for the shopping application. It uses React's `useContext` to access the shopping cart context, which provides the list of items in the cart (`items`), a function to add items (`addItem`), and a function to remove items (`removeItem`). The component also uses a custom hook `useTotalPrice` to calculate the total price of items in the cart.
+
+And in the outmost `App` component, we can wrap the `ShoppingApplicaion` inside:
+
+```tsx
+<ShoppingCartProvider>
+  <ShoppingApplication />
+</ShoppingCartProvider>
+```
+
+Command Query Responsibility Segregation (CQRS) is a design pattern that separates the modification and query aspects of a system to enhance scalability, maintainability, and simplicity. We demonstrated this principle by implementing a shopping cart feature. Commands to modify the cart's state, like adding or removing items, were segregated from the queries, which included fetching the list of items and calculating the total price. This separation was made clear through the use of React's context API and custom hooks, which isolated each responsibility effectively. This not only improves code readability but also makes it easier to manage and scale the application in the future.
+
+# Summary
+
+In this chapter, we've unpacked three crucial design principles: Single Responsibility for focused, easy-to-understand components; Dependency Inversion for modular, testable code; and CQRS for a distinct separation between commands and queries, enhancing maintainability. These principles offer a robust foundation for building scalable and high-quality software. 
+
+In the next chapter, we'll dive deeper into composition principles to further refine our approach to React application design.
