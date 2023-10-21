@@ -345,11 +345,11 @@ In this final snippet, we define a `SearchResultItemProps` type to specify the s
 
 Now the list item provides more details to help users distinguish between the results. Before we proceed to the next major feature, let's first tackle some housekeeping tasks. While we've been focused on delivering the feature, we haven't given much attention to code quality so far.
 
-# Applying Anti-Corruption Layer
+# Implementing Anti-Corruption Layer
 
-As an individual component, SearchResultItem works perfectly. But the problem is in the search result we get from remote server, the data is in a different shape.
+Within our application, the `SearchResultItem` component serves its purpose well. However, the challenge arises from the discrepancy between the data shape we require and the data shape we receive from the remote server.
 
-For example, it contains many unnecessary items we don't need. And also we want to make sure the `SearchResultItem` won't be affected if the data shaped changed in the future.
+Consider the server's response; it includes many elements we don't need. Moreover, we want to shield our `SearchResultItem` from any future changes to the data shape from the server.
 
 ```tsx
 [
@@ -369,9 +369,9 @@ For example, it contains many unnecessary items we don't need. And also we want 
 ]
 ```
 
-Fortunately, as we have discussed in Chapter 8, we can use Anti-Corruption Layer to shield this potential issue. We need to map city name and state as is, but we want to show the full name of the country - so there isn't any abgirtity in the UI.
+As discussed in Chapter 8, we can employ an Anti-Corruption Layer to address this issue. We aim to map the city name and state directly, but for the country, we want to display its full name to avoid any ambiguity in the UI.
 
-We can define a type to represent the remote data shape first called `RemoteSearchResultItem`:
+Initially, we define a type `RemoteSearchResultItem` to represent the remote data shape:
 
 ```tsx
 interface RemoteSearchResultItem {
@@ -388,13 +388,14 @@ interface RemoteSearchResultItem {
 }
 ```
 
-And then let's change the type `SearchResultItemProps` into a class, so we can initialised it in TypeScript code.
+Next, we change the type `SearchResultItemProps` into a class, enabling its initialization within the TypeScript code.
 
 ```tsx
 const countryMap = {
   "AU": "Australia",
   "US": "United States",
   "GB": "United Kingdom"
+  //...
 }
 
 class SearchResultItemType {
@@ -417,15 +418,14 @@ class SearchResultItemType {
   }
 
   get country() {
-    // @ts-ignore
     return countryMap[this._country] || this._country;
   }
 }
 ```
 
-*explain the code above*
+This segment of code defines a class `SearchResultItemType` which accepts a `RemoteSearchResultItem` object in its constructor, and initializes its properties accordingly. It also provides getter methods to access these properties, with a special handling for the `country` property to map country code to its full name.
 
-Our SearchResultItem component now can use this new defined class:
+Now, our `SearchResultItem` component can utilize this newly defined class:
 
 ```tsx
 import React from "react";
@@ -442,10 +442,10 @@ export const SearchResultItem = ({ item }: { item: SearchResultItemType }) => {
 };
 ```
 
-And we can test the behaviour straightforward:
+Note here how we use getter functions `item.city`, `item.state` just like a regular JavaScript Object. And testing the transformation logic is straightforward as seen below:
 
 ```tsx
-it("convert the remote type to local", () => {
+it("converts the remote type to local", () => {
   const remote = {
     country: "US",
     lat: 28.106471,
@@ -468,9 +468,9 @@ it("convert the remote type to local", () => {
 });
 ```
 
-*explain the code above*
+In this test, we create an instance of `SearchResultItemType` using a mock `RemoteSearchResultItem` object, and verify that the transformation logic works as intended - the fields are correctly mapped and country has its fullname too.
 
-Once we verified the code works as expected in tests, in the application code, we could use this new class once fetched:
+Once the tests confirm the expected behavior, we can apply this new class within our application code as follows:
 
 ```tsx
 const fetchCities = () => {
@@ -488,9 +488,11 @@ const fetchCities = () => {
 };
 ```
 
-*explain the code above*
+This function fetches city data from the remote server, transforms the received data into instances of `SearchResultItemType`, and then updates the `searchResults` state.
 
-Now we can show the details on the dropdown so user can clearly see which city is they wanted. And as we have the search result, the next step would be adding city to user's favorite list, so they can see the weather information.
+With enriched details in the dropdown, users can clearly identify their desired city. Having achieved this, we can proceed to allow users to add cities to their favorite list, paving the way to display weather information for these selected cities.
+
+Given our Cypress feature tests, there's a safeguard against inadvertently breaking functionality. Additionally, with the newly incorporated unit tests, any discrepancies between remote and local data shapes will be automatically detected. We are now well-positioned to embark on developing the next feature.
 
 # Implementing add to favorite 
 
@@ -572,7 +574,7 @@ cy.intercept('GET', 'https://api.openweathermap.org/data/2.5/weather*', {
 }).as('getWeather')
 ```
 
-And for the implementation, we'll need to register a `onClick` event handler in `SearchResultItem`. Once the item is clicked, we initiate a API call to the API above, and then add a city to a list for rendering.
+Transitioning to the implementation, we'll weave an `onClick` event handler into `SearchResultItem`. Upon clicking an item, an API call is triggered, followed by the addition of a city to a list designated for rendering.
 
 ```tsx
 export const SearchResultItem = ({
@@ -584,15 +586,13 @@ export const SearchResultItem = ({
 }) => {
   return (
     <li className="search-result" onClick={() => onItemClick(item)}>
-      <span className="city">{item.city}</span>
-      <span className="state">{item.state}</span>
-      <span className="country">{item.country}</span>
+    { /* JSX for rendering the item details */ }
     </li>
   );
 };
 ```
 
-In the application code, we will add the data fetching logic:
+Now, let's dive into the application code to interlace the data fetching logic:
 
 ```tsx
 const onItemClick = (item: SearchResultItemType) => {
@@ -609,15 +609,18 @@ const onItemClick = (item: SearchResultItemType) => {
 };
 ```
 
-Note the type `SearchResultItemType` here, we'll need to add latituide and longitidue as part of the type - we do that in the ACL layer again, which is the class `SearchResultItemType`:
+The `onItemClick` function is triggered upon clicking a city item. It makes a network request to OpenWeatherMap API using the `item`'s latitude and longitude, fetching the current weather data for the selected city. It then parses the response to JSON, extracts the city name and temperature from the parsed data, and updates the `city` state using the `setCity` function, which will cause the component to re-render and display the selected city's name and current temperature.
+
+In the snippet above, do note the parameter `SearchResultItemType`. We'll need to extend this type to encompass latitude and longitude, achieved through a revisit to the ACL layer in the `SearchResultItemType` class:
 
 ```tsx
 class SearchResultItemType {
-  //...
+  //... the city, state, country as before
   private readonly _lat: number;
   private readonly _long: number;
 
   constructor(item: RemoteSearchResultItem) {
+    //... the city, state, country as before
     this._lat = item.lat;
     this._long = item.lon;
   }
@@ -629,20 +632,19 @@ class SearchResultItemType {
   get longitude() {
     return this._long;
   }
-
-  //...
 }
 ```
 
-And finally we render the city once achieved:
+We have extended the `SearchResultItemType` with two new fields: latitude and longitude that will be used in the API query. Finally, upon successful retrieval of city data, it's time for rendering:
 
 ```tsx
 function App() {
   const [city, setCity] = useState(undefined);
 
-  const onItemClick = (item: SearchResultItemType) => {}
+  const onItemClick = (item: SearchResultItemType) => {
+    //...
+  }
 
-  //...
   return(
       <div className="search-results-popup">
         {searchResults.length > 0 && (
@@ -667,21 +669,24 @@ function App() {
         )}
       </div>
   );
-
-  //...
 }
 ```
 
+In this block of code, the `onItemClick` function is assigned as the `onClick` event handler for each `SearchResultItem`. When a city is clicked, the `onItemClick` function is invoked, triggering a fetch request to retrieve the weather data for the selected city. Once the data is obtained, the `setCity` function updates the `city` state, which then triggers a re-render, displaying the selected city in the "Favorite Cities" section.
+
+Now that all the tests have passed, it signifies that our implementation aligns with the expectations up to this point. However, before we proceed to the next enhancement, it's essential to undertake some refactoring to ensure our codebase remains robust and easily maintainable.
+
 ## Modeling the weather
 
-There are a few places need to be refined here.
+Just as we modeled the city search result, it's necessary to model the weather for similar reasons - to isolate our implementation from the remote data shape, and to centralize data shape conversion, fallback logic, and so on.
 
-- Make sure all the data we care about are typed
-- We need to create data model for the weather so we can centric all the formatting logic in one place
-- If some data isn't available, we can use fallback values in data model
+Several areas require refinement:
 
+- Ensure all relevant data is typed.
+- Create a data model for the weather to centralize all formatting logic.
+- Utilize fallback values within the data model when certain data is unavailable.
 
-Let's start from the remote data type `RemoteCityWeather`
+Let's begin with the remote data type `RemoteCityWeather`:
 
 ```tsx
 interface RemoteCityWeather {
@@ -703,7 +708,7 @@ interface RemoteCityWeather {
 export type { RemoteCityWeather };
 ```
 
-Note here we have filtered out a few fields that we don't use. And then we define a new type for our UI to use `CityWeather`:
+We defined a type `RemoteCityWeather` to reflect the remote data shape. Note here we have filtered out a few fields that we don't use. And then we define a new type for our UI to use `CityWeather`:
 
 ```tsx
 import { RemoteCityWeather } from "./RemoteCityWeather";
@@ -749,7 +754,7 @@ And in the `App`, we can then use the calculated logic:
 ```tsx
 const onItemClick = (item: SearchResultItemType) => {
   fetch(
-    `https://api.openweathermap.org/data/2.5/weather?lat=${item.latitude}&lon=${item.longitude}&appid=91c8138e0d479b826ec6e9d617cf4c6c&units=metric`
+    `https://api.openweathermap.org/data/2.5/weather?lat=${item.latitude}&lon=${item.longitude}&appid=<api-key>&units=metric`
   )
     .then((r) => r.json())
     .then((cityWeather: RemoteCityWeather) => {
@@ -758,6 +763,8 @@ const onItemClick = (item: SearchResultItemType) => {
     });
 };
 ```
+
+The `onItemClick` function is triggered when a city item is clicked. It makes a fetch request to the OpenWeatherMap API using the latitude and longitude of the clicked city item. Upon receiving the response, it converts the response to JSON, then creates a new `CityWeather` instance with the received data, and updates the city state using `setCity`. Additionally, it closes the dropdown menu by setting the `setDropdownOpen` state to false.
 
 And render it correspondingly
 
@@ -772,13 +779,20 @@ And render it correspondingly
 </div>
 ```
 
+For rendering the city part, if the `city` state is defined (i.e., a city has been selected), it displays a div with the class name "city." Inside this div, it shows the city's name and temperature using the `city.name` and `city.temperature` properties, respectively.
+
 With some styling, our application has a few important features already.
 
+![Figure 12-x. Add City to Favorite List](ch12/city-weather.png)
+
+We've done an excellent job with data modeling and have set up a solid Anti-Corruption Layer (ACL) to bolster our UI's robustness and ease of maintenance. Nonetheless, upon examining the root `App` component, we'll undoubtedly find areas that require improvement.
+
 ## Refactoring the current implementation
+Our current `App` component has grown too lengthy for easy readability and feature additions, indicating a need for some refactoring to tidy things up. It doesn't adhere well to the Single Responsibility Principle, as it takes on multiple responsibilities: handling network requests for city search and weather queries, managing the state of the dropdown's open and closed status, along with several event handlers.
 
-Our currently `App` is already too long for us to read and add new features, so we could conduct some refactorings to make it cleaner.
+One approach to realign with better design principles is to break down the UI into smaller components. Another is utilizing custom hooks for state management. Given that a significant portion of the logic here revolves around managing the state for the city search dropdown, it's sensible to start by isolating this part.
 
-Let's extract all the search city into a custom hook
+Let's initiate by extracting all city search related logic into a custom hook.
 
 ```tsx
 const useSearchCity = () => {
@@ -819,15 +833,11 @@ const useSearchCity = () => {
 export { useSearchCity };
 ```
 
+The `useSearchCity` hook manages the city search functionality. It initializes states for query, search results, and dropdown open status using `useState`. The `fetchCities` function triggers a network request to fetch cities based on the query, processes the response to create `SearchResultItemType` instances, updates the search results state, and opens the dropdown list. Two functions `openDropdownList` and `closeDropdownList` are defined to toggle the dropdown's open status. The hook returns an object containing these functionalities which can be used by components that import and invoke `useSearchCity`.
 
 And then we extract a component `SearchCityInput` to handle all the serach input related work, "Enter" for search, open the dropdown and handle user click:
 
 ```tsx
-import { SearchResultItemType } from "./models/SearchResultItemType";
-import { useSearchCity } from "./useSearchCity";
-import React, { ChangeEvent, KeyboardEvent } from "react";
-import { SearchResultItem } from "./SearchResultItem";
-
 export const SearchCityInput = ({
   onItemClick,
 }: {
@@ -868,24 +878,16 @@ export const SearchCityInput = ({
       </div>
 
       {isDropdownOpen && (
-        <div className="search-results-popup">
-          {searchResults.length > 0 && (
-            <ul data-testid="search-results" className="search-results">
-              {searchResults.map((item, index) => (
-                <SearchResultItem
-                  key={index}
-                  item={item}
-                  onItemClick={handleItemClick}
-                />
-              ))}
-            </ul>
-          )}
-        </div>
+        //... render the dropdown
       )}
     </>
   );
 };
 ```
+
+The `SearchCityInput` component is responsible for rendering and managing the user input for searching cities. It utilizes the `useSearchCity` hook to access search-related functionalities. The `handleKeyDown` and `handleChange` functions are defined to handle user interactions - triggering a search on pressing 'Enter' and updating the query on input change, respectively. The `handleItemClick` function is defined to handle the action when a search result item is clicked, which triggers the `onItemClick` prop function and closes the dropdown list. 
+
+In the render method, an input field is provided for the user to type the search query, and the dropdown list is conditionally rendered based on `isDropdownOpen` state. If the dropdown is open and there are search results, a list of `SearchResultItem` components is rendered, each being passed the current item data and the `handleItemClick` function.
 
 For all the logic of the weather for a city, we can extract another hook `useCityWeather`:
 
@@ -910,6 +912,10 @@ const useFetchCityWeather = () => {
 };
 ```
 
+The `useFetchCityWeather` custom hook is designed to manage the fetching and storing of weather data for a specified city. It maintains a state `cityWeather` to hold the weather data. The hook provides a function `fetchCityWeather`, which takes a `SearchResultItemType` object as an argument to get the latitude and longitude for the API call. Upon receiving the response, it processes the JSON data, creates a new `CityWeather` object from the `RemoteCityWeather` data, and updates the `cityWeather` state with it. 
+
+The hook returns an object containing the `cityWeather` state and the `fetchCityWeather` function for use in other components.
+
 We could extract a `Weather` component to accpet a `cityweather` and render:
 
 ```tsx
@@ -926,6 +932,8 @@ const Weather = ({ cityWeather }: { cityWeather: CityWeather | undefined }) => {
   return null;
 };
 ```
+
+The `Weather` component accepts a prop `cityWeather`. If `cityWeather` is defined, the component renders a `div` element with the class name "city", displaying the city's name and temperature in degrees Celsius. If `cityWeather` is undefined, it returns `null`, rendering nothing.
 
 And our App.tsx is simplified into something like:
 
@@ -949,9 +957,11 @@ function App() {
 }
 ```
 
-*explain the code*
+In the `App` function, you're utilizing the `useFetchCityWeather` custom hook to obtain `cityWeather` and `fetchCityWeather` values. The `onItemClick` function is defined to call `fetchCityWeather` with an item of type `SearchResultItemType`. In the rendering part, we now can simply use the component and functions we extracted.
 
-# Multiple cities
+Now, each segment possesses a clearer boundary and defined responsibility. If you wish to delve into the search functionality, `SearchCityInput` is your starting point. For insights on the actual search execution, the `useSearchCity` hook is where you'd look. Each level maintains its own abstraction and distinct responsibility, simplifying code comprehension and maintenance significantly.
+
+# Enabling multiple cities in favorite list
 
 What if we want to be able to show multiple cities? There are two places we need to change, the `useFetchCityWeather` hook - to make it be able to handle a list of cities. And in `App` we will need to show the list.
 
