@@ -1,4 +1,4 @@
-# An end-to-end journey
+# An End-To-End Journey - Weather Application
 
 In the preceding chapters, we've delved into a variety of topics including testing, Test-Driven Development, design patterns, and design principles. These concepts are invaluable as they pave the way towards a more resilient and maintainable codebase. Now, I'd like to embark on a journey of constructing an application from the ground up, applying the knowledge we've acquired to tackle an end-to-end scenario.
 
@@ -10,17 +10,53 @@ The overarching goal is to showcase the end-to-end process of crafting a functio
 
 What will be covered:
 
-- 1
-- 2
-- 3
+- Unveiling the Requirements
+- Crafting Our Initial Acceptance Test
+- Implementing City Search feature
+- Implementing Anti-Corruption Layer
+- Implementing add to favorite 
+- Fetching weather when application launches
 
-# Preparation
+# Technical requirements
+
+A GitHub repository has been created to host all the code we discuss in the book. For this chapter, you can find the recommended structure under *https://github.com/PacktPublishing/React-Anti-Patterns/tree/main/ch12*.
+
+## Getting a OpenWeatherMap API Key
 
 To utilize OpenWeatherMap, you'll need to create an account on https://openweathermap.org/. Although various plans are available based on usage, the free plan suffices for our purposes. After registering, navigate to "My API keys" to find your API key as displayed in Figure 12-1.
 
 ![Figure 12-1. OpenWeatherMap API key](ch12/openweather.png)
 
 Keep a copy of this key handy, as we'll use it for making calls to the weather API to fetch data.
+
+## Preparing the project codebase
+
+If you prefer to follow along with me, you will need to install a few packages before we start. However, if you want to see the final results, it's already in the repo mentioned earlier. I would recommend you to follow along to see how we evolve our applicaion into the final state. 
+
+To kick things off, we'll create a new React app using the commands below:
+
+```bash
+npx create-react-app weather-app --template typescript
+cd weather-app
+yarn add cypress jest-fetch-mock -D
+yarn install
+```
+
+These commands are used to set up a new React project with TypeScript and Cypress.
+
+1. `npx create-react-app weather-app --template typescript`: This command utilizes `npx` to run the `create-react-app` utility, which scaffolds out a new React application in a directory named `weather-app`. The `--template typescript` option specifies that this project should be configured to use TypeScript.
+
+2. `yarn add cypress jest-fetch-mock -D`: This command installs Cypress, a testing framework, as a development dependency in the project, and `jest-fetch-mock` - for mocking the fetch function in jest tests. The `-D` flag indicates that this is a development dependency, meaning it's not required for the production version of the application.
+
+3. `yarn install`: This command installs all the dependencies listed in the `package.json` file of the project, ensuring that all the necessary libraries and tools are available.
+
+And finally we can start the template application by running the following command:
+
+```bash
+yarn start
+```
+
+It will launch the application on port 3000. You can leave the application running on 3000 open and open another terminal window for running tests.
 
 # Unveiling the Requirements
 
@@ -39,30 +75,7 @@ The end result will resemble what's illustrated in Figure 12-1. While it's not a
 
 Chapter 7 familiarized us with the notion of starting with an acceptance test—a test approached from an end user's standpoint, as opposed to a developer's perspective. Essentially, we aim for our test to validate aspects a user would perceive or interact with on the webpage, rather than technicalities like function calls or class initializations.
 
-To kick things off, we'll create a new React app using the commands below:
-
-```bash
-npx create-react-app weather-app --template typescript
-cd weather-app
-yarn add cypress -D
-yarn install
-```
-
-These commands are used to set up a new React project with TypeScript and Cypress.
-
-1. `npx create-react-app weather-app --template typescript`: This command utilizes `npx` to run the `create-react-app` utility, which scaffolds out a new React application in a directory named `weather-app`. The `--template typescript` option specifies that this project should be configured to use TypeScript.
-
-2. `yarn add cypress -D`: This command installs Cypress, a testing framework, as a development dependency in the project. The `-D` flag indicates that this is a development dependency, meaning it's not required for the production version of the application.
-
-3. `yarn install`: This command installs all the dependencies listed in the `package.json` file of the project, ensuring that all the necessary libraries and tools are available.
-
-And finally we can start the template application by running the following command:
-
-```bash
-yarn start
-```
-
-It will launch the application on port 3000. Now, let's create a Cypress test within `cypress/e2e/weather.spec.cy.ts`:
+Within the folder you created in Technical requirements (e.g. "weather-app"), let's create a Cypress test within `cypress/e2e/weather.spec.cy.ts`:
 
 ```tsx
 describe('weather application', () => {
@@ -105,7 +118,7 @@ export default App;
 
 This code defines a functional component named `App` in React, which renders a div containing an h1 element with the text 'Weather Application'. And with this heading defined our Cypress test will pass.
 
-# Implementing City Search
+# Implementing City Search feature
 
 Let's commence the development of our first feature - city search. Users will be able to enter a city name into a search box, which triggers a request to a remote server. Upon receiving the data, we'll render it into a list for user selection. Throughout this chapter, we'll utilize the OpenWeatherMap API for city searches as well as retrieving weather information.
 
@@ -736,7 +749,7 @@ export class CityWeather {
     if (this._temp == null) {
       return "-/-";
     }
-    return `${Math.ceil(this._temp)}°`;
+    return `${Math.ceil(this._temp)}°C`;
   }
 
   get main() {
@@ -764,7 +777,11 @@ const onItemClick = (item: SearchResultItemType) => {
 };
 ```
 
-The `onItemClick` function is triggered when a city item is clicked. It makes a fetch request to the OpenWeatherMap API using the latitude and longitude of the clicked city item. Upon receiving the response, it converts the response to JSON, then creates a new `CityWeather` instance with the received data, and updates the city state using `setCity`. Additionally, it closes the dropdown menu by setting the `setDropdownOpen` state to false.
+The `onItemClick` function is triggered when a city item is clicked. It makes a fetch request to the OpenWeatherMap API using the latitude and longitude of the clicked city item. Upon receiving the response, it converts the response to JSON, then creates a new `CityWeather` instance with the received data, and updates the city state using `setCity`. 
+
+Additionally, it closes the dropdown menu by setting the `setDropdownOpen` state to false. If we don't close it off, Cypress test will not be able to "see" the underlying weather information, and will cause the test to faile like the image below:
+
+![Cypress Test failed because the weather is covered](ch12/failed-test-cypress.png)
 
 And render it correspondingly
 
@@ -959,13 +976,38 @@ function App() {
 
 In the `App` function, you're utilizing the `useFetchCityWeather` custom hook to obtain `cityWeather` and `fetchCityWeather` values. The `onItemClick` function is defined to call `fetchCityWeather` with an item of type `SearchResultItemType`. In the rendering part, we now can simply use the component and functions we extracted.
 
+
+```text
+src
+├── App.tsx
+├── index.tsx
+├── models
+│   ├── CityWeather.ts
+│   ├── RemoteCityWeather.ts
+│   ├── RemoteSearchResultItem.ts
+│   ├── SearchResultItemType.test.ts
+│   └── SearchResultItemType.ts
+├── search
+│   ├── SearchCityInput.tsx
+│   ├── SearchResultItem.test.tsx
+│   ├── SearchResultItem.tsx
+│   └── useSearchCity.ts
+└── weather
+    ├── Weather.tsx
+    ├── useFetchCityWeather.test.ts
+    ├── useFetchCityWeather.ts
+    └── weather.css
+```
+
 Now, each segment possesses a clearer boundary and defined responsibility. If you wish to delve into the search functionality, `SearchCityInput` is your starting point. For insights on the actual search execution, the `useSearchCity` hook is where you'd look. Each level maintains its own abstraction and distinct responsibility, simplifying code comprehension and maintenance significantly.
 
-# Enabling multiple cities in favorite list
+## Enabling multiple cities in favorite list
 
-What if we want to be able to show multiple cities? There are two places we need to change, the `useFetchCityWeather` hook - to make it be able to handle a list of cities. And in `App` we will need to show the list.
+Let's examine a specific example to illustrate the ease with which we can expand the existing code with a simple feature upgrade. A user may have several cities they're interested in, but at present, we can only display one city.
 
-Let's write a test for the hook first:
+Which component should we modify to implement this change? Correct, the `useFetchCityWeather` hook - to enable it to manage a list of cities, and within the `App`, we'll need to display this list. There's no need to delve into the city search-related files, indicating that this structure has halved the time we would spend sifting through files.
+
+As we're performing TDD, Let's write a test for the hook first:
 
 ```tsx
 const weatherAPIResponse = JSON.stringify({
@@ -1035,7 +1077,6 @@ There are a bit more going on here. The test suite is structured to ensure that 
 
 This setup helps to test the `fetchCityWeather` function in isolation, ensuring it behaves as expected when provided with a specific input and when receiving a specific API response.
 
-
 Correspondingly, we need to update the `useFetchCityWeather` hook to enable multiple items:
 
 ```tsx
@@ -1056,7 +1097,9 @@ const useFetchCityWeather = () => {
 };
 ```
 
-we then make sure the new item is inserted at first of the list. Then finally in `App`, we can iterate over the `cities`:
+The `useFetchCityWeather` hook now maintains a state of an array of `CityWeather` objects called `cities`. We still send request to OpenWeatherMap API and then we make sure the new item is inserted at first of the list when fetched. It returns an object containing the `cities` array to the calling place. 
+
+Then finally in `App`, we can iterate over the `cities`:
 
 ```tsx
 function App() {
@@ -1076,35 +1119,13 @@ function App() {
 }
 ```
 
+The `cities` array is mapped over, and for each `CityWeather` object in the array, a `Weather` component is rendered. The `key` prop for each `Weather` component is set to the city's name, and the `cityWeather` prop is set to the `CityWeather` object itself, which will display the weather information for each city in the list.
+
 Then we would be able to see something like this in the UI:
 
-![]()
+![Showing multiple cities in Favorite List](ch12/multiple-cities.png)
 
-
-```text
-src
-├── App.css
-├── App.tsx
-├── assets
-├── index.css
-├── index.tsx
-├── models
-│   ├── CityWeather.ts
-│   ├── RemoteCityWeather.ts
-│   ├── RemoteSearchResultItem.ts
-│   ├── SearchResultItemType.test.ts
-│   └── SearchResultItemType.ts
-├── search
-│   ├── SearchCityInput.tsx
-│   ├── SearchResultItem.test.tsx
-│   ├── SearchResultItem.tsx
-│   └── useSearchCity.ts
-└── weather
-    ├── Weather.tsx
-    ├── useFetchCityWeather.test.ts
-    ├── useFetchCityWeather.ts
-    └── weather.css
-```
+Before diving into our next and final feature, it's essential to make one more straightforward improvement to the existing code, ensuring adherence to the Single Responsibility Principle.
 
 ## Refactoring the weather list
 
@@ -1122,8 +1143,9 @@ const WeatherList = ({ cities }: { cities: CityWeather[] }) => {
 };
 ```
 
-And the App.tsx will be simplified into 
+The `WeatherList` component receives a `cities` prop which is an array of `CityWeather` objects. It iterates through this array using `map`, rendering a `Weather` component for each city.
 
+With hte new `WeatherList` in place, the App.tsx will be simplified into 
 
 ```tsx
 function App() {
@@ -1140,11 +1162,13 @@ function App() {
 }
 ```
 
-Fantastic!
+ Fantastic! Now that our application structure is clean and each component has a single responsibility, it's an opportune time to dive into implementing a new (and the last one) feature to enhance our weather application further.
 
-# Fetching weather when launch
+# Fetching weather when application launches
 
-Let's add our final feature: remember what user selected. As it's a feature we would like to add a tests in cypress.
+For the final feature in our weather application, we aim to retain the user's selections so that upon their next visit to the application, instead of encountering an empty list, they see the cities they previously selected. This feature is likely to be highly utilized - users will only need to add a few cities initially, and afterwards, they may merely open the application to have the weather for their cities loaded automatically.
+
+Let's start the feature with and user acceptance test with Cypress:
 
 ```tsx
 const items = [
@@ -1180,11 +1204,11 @@ it("fetches data when initialising when possible", () => {
 });
 ```
 
-The `cy.window()` command accesses the global `window` object and sets a `favoriteItems` item in localStorage with the `items` array. Following that, `cy.intercept()` stubs the network request to the OpenWeatherMap API, using a fixture file "melbourne.json" for the mock response. The `cy.visit()` command navigates to the application on "http://localhost:3000/". Once on the page, the test checks for one city item in the favorite cities list, verifies the presence of a city item for Melbourne, and confirms it displays a temperature of "20°C".
+The `cy.window()` command accesses the global `window` object and sets a `favoriteItems` item in `localStorage` with the `items` array. Following that, `cy.intercept()` stubs the network request to the OpenWeatherMap API, using a fixture file "melbourne.json" for the mock response. The `cy.visit()` command navigates to the application on "http://localhost:3000/". Once on the page, the test checks for one city item in the favorite cities list, verifies the presence of a city item for Melbourne, and confirms it displays a temperature of "20°C".
 
-In other words, we set up one item in localStorage so when the page loads it can read the localStorage and make request to remote server just like what we do in `onItemClick`.
+In other words, we set up one item in `localStorage` so when the page loads it can read the `localStorage` and make request to remote server just like what we do in `onItemClick`.
 
-We'll need a function to fetch data, in `useFetchCityWeather` there is a `fetchCityWeather` function, but it does two things - fetch data and setCities, so we will need to extract a function that only fetch data (which align with the single responsibility principle).
+We'll need to extract a data fetching function within `useFetchCityWeather`. Currently, the `fetchCityWeather` function is handling two tasks - fetching data and updating the `cities` state. To adhere to the Single Responsibility Principle, we should create a new function solely for fetching data, leaving `fetchCityWeather` to handle updating the state.
 
 ```tsx
 export const fetchCityWeatherData = async (item: SearchResultItemType) => {
@@ -1195,6 +1219,8 @@ export const fetchCityWeatherData = async (item: SearchResultItemType) => {
   return new CityWeather(json);
 };
 ```
+
+The `fetchCityWeatherData` function takes a `SearchResultItemType` object as an argument, constructs a URL with the latitude and longitude from the item, and sends a fetch request to the OpenWeatherMap API. Upon receiving the response, it converts the response to JSON, creates a new `CityWeather` object with the JSON data, and returns it.
 
 And then the `fetchCityWeather` can be updated as:
 
@@ -1210,7 +1236,9 @@ const useFetchCityWeather = () => {
 }
 ```
 
-Then in App component, we can use `useEffect` to hydrate the localStorage data and send requests for the acutal weather data:
+The `useFetchCityWeather` hook now contains a `fetchCityWeather` function that calls `fetchCityWeatherData` with a given `SearchResultItemType` item. When the promise resolves, it receives a `CityWeather` object, then updates the state `cities` by adding the new `CityWeather` object at the beginning of the existing cities array.
+
+Then in `App` component, we can use `useEffect` to hydrate the `localStorage` data and send requests for the acutal weather data:
 
 ```tsx
 useEffect(() => {
@@ -1230,9 +1258,13 @@ useEffect(() => {
 }, []);
 ```
 
-In this code snippet, a `useEffect` hook triggers a function named `hydrate` when the component mounts, thanks to the empty dependency array `[]`. Inside `hydrate`, firstly, it retrieves a stringified array from `localStorage` under the key "favoriteItems", parsing it back to a JavaScript array, or defaulting to an empty array if the key doesn't exist. It then maps through this `items` array, creating a new instance of `SearchResultItemType` for each item, which it passes to the `fetchCityWeatherData` function. This function likely returns a promise, which is collected into an array `promises`. Using `Promise.all`, it waits for all these promises to resolve before updating the state with `setCities`, populating it with the fetched city weather data. Finally, `hydrate` is called within the `useEffect` to execute this logic upon component mounting.
+In this code snippet, a `useEffect` hook triggers a function named `hydrate` when the component mounts, thanks to the empty dependency array `[]`. 
 
-Also to save item into localStorage when user click an item, we need a bit more code:
+Inside `hydrate`, firstly, it retrieves a stringified array from `localStorage` under the key "favoriteItems", parsing it back to a JavaScript array, or defaulting to an empty array if the key doesn't exist. It then maps through this `items` array, creating a new instance of `SearchResultItemType` for each item, which it passes to the `fetchCityWeatherData` function. This function returns a promise, which is collected into an array `promises`. 
+
+Using `Promise.all`, it waits for all these promises to resolve before updating the state with `setCities`, populating it with the fetched city weather data. Finally, `hydrate` is called within the `useEffect` to execute this logic upon component mounting.
+
+Also to save item into `localStorage` when user click an item, we need a bit more code:
 
 ```tsx
 const onItemClick = (item: SearchResultItemType) => {
@@ -1255,13 +1287,21 @@ const onItemClick = (item: SearchResultItemType) => {
 };
 ```
 
-In this code snippet, a function named `onItemClick` is defined, which accepts an argument `item` of type `SearchResultItemType`. Inside the function, a `setTimeout` is utilized with a delay of `0` milliseconds, essentially deferring the execution of its contents until after the current call stack has cleared. 
+In this code snippet above, function `onItemClick` accepts an argument `item` of type `SearchResultItemType`. Inside the function, a `setTimeout` is utilized with a delay of `0` milliseconds, essentially deferring the execution of its contents until after the current call stack has cleared. 
 
 Within this deferred block, it retrieves a stringified array from `localStorage` under the key "favoriteItems", parsing it back to a JavaScript array, or defaults to an empty array if the key doesn't exist. It then creates a new object `newItem` from the `item` argument, extracting and renaming some properties. Following this, it updates the "favoriteItems" key in `localStorage` with a stringified array containing `newItem` at the beginning, followed by the previously stored items. 
 
-Outside of `setTimeout`, it calls `fetchCityWeather` with the `item` argument, likely fetching weather data for the clicked city, and returns the result of this call from `onItemClick`.
+Outside of `setTimeout`, it calls `fetchCityWeather` with the `item` argument, fetching weather data for the clicked city, and returns the result of this call from `onItemClick`.
 
-![using data from local storage](ch12/localstorage.png)
+And when we inspect the localStorage in browser, we could see the objects are listed in JSON format. The data will presist until users explictly clean them.
+
+![Figure 12-x. Using data from local storage](ch12/localstorage.png)
+
+Excellent job! Everything is now functioning well, and the code is in a robust shape that's easy to build upon. Moreover, the project structure is intuitive, facilitating easy navigation and file location whenever we need to implement changes.
+
+This chapter was quite extensive and packed with insightful information, serving as a great recapitulation of the knowledge acquired thus far. While it would be engaging to continue adding more features together, I believe it's now an opportune time for you to dive in and apply the concepts and techniques gleaned from this book. I'll entrust the enhancement task to you, confident that you'll make commendable adjustments as you introduce more features.
 
 # Summary
+
+In this chapter, we embarked on creating a weather application from scratch, adhering to the test-driven development (TDD) methodology. We employed Cypress for user acceptance tests and Jest for unit tests, progressively building out the application's features. Key practices such as introducing an abstraction and control layer (ACL), stubbing network requests, and applying the Single Responsibility Principle during refactoring were explored. While not exhaustive in covering all techniques from previous chapters, this segment underscored the importance of maintaining a disciplined pace during the development phase. It highlighted the value of being able to identify code "smells" and address them effectively, all while ensuring a solid test coverage to foster a robust and maintainable codebase. This chapter serves as a practical synthesis, urging you to apply the acquired knowledge and techniques in enhancing the application further.
 

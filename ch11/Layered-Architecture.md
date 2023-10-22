@@ -392,16 +392,16 @@ For example, if the order amount is $19.80, we ask if they would like to donate 
 Before we make any changes, let's have a quick look at the current code structure. I prefer have different parts in their folder so it's easy for me to navigate when it grows bigger.
 
 ```
-    src
-    ├── App.tsx
-    ├── components
-    │   ├── Payment.tsx
-    │   └── PaymentMethods.tsx
-    ├── hooks
-    │   └── usePaymentMethods.ts
-    ├── models
-    │   └── PaymentMethod.ts
-    └── types.ts
+  src
+  ├── App.tsx
+  ├── components
+  │   ├── Payment.tsx
+  │   └── PaymentMethods.tsx
+  ├── hooks
+  │   └── usePaymentMethods.ts
+  ├── models
+  │   └── PaymentMethod.ts
+  └── types.ts
 ```
 
 `App.tsx` is the main entry, it uses `Payment` component, and `Payment` uses `PaymentMethods` for rendering different payment options. The hook `usePaymentMethods` is responsible for fetching data from remote service and then convert it to a `PaymentMethod` domain object that is used to hold `label` and the `isDefaultChecked` flag.
