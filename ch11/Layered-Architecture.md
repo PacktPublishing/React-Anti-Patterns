@@ -77,619 +77,731 @@ The application keeps evolving, and then you find some patterns emerge. There ar
 
 The above evolution process is a high-level overview, and you should have a taste of how you should structure your code or at least what the direction should be. However, there will be many details you need to consider before applying the theory in your application.
 
-In the following sections, I’ll walk you through a feature I extracted from a real project to demonstrate all the patterns and design principles I think useful for big frontend applications.
+In the following sections, I'll guide you through expanding the Code Oven application we introduced in Chapter 7, to showcase essential patterns and design principles for large frontend applications.
 
-# Introducing data modelling in React
+# Enhancing Code Oven
 
-Note: Data Modelling
+Recall that at the end of Chapter 7, we developed the basic structure of a pizza store application named Code Oven (showing in Figure 11-6. below), leveraging Test-Driven Development to establish a solid foundation for the app. Note that we employ the design mockup as a guide, not to implement all the details exhaustively - the primary goal remains to illustrate how to refactor the code while preserving its maintainability.
 
-I’m using an simplified online ordering application as a starting point. In this application, a customer can pick up some products and add them to the order, and then they will need to select one of the payment methods to continue.
+![Figure 11-6. The Code Oven Application](ch11/code-oven-mockup.png)
 
-![Figure 11-6. Payment section](ch11/payment-methods.png)
+Although we didn't delve much into feature implementation in that chapter, in this chapter, we'll extend our setup further. We'll explore how different architectural types can assist us in managing complexity.
 
-These payment method options are configured on the server side, and customers from different countries may see other options. For example, Apple Pay may only be popular in some countries. The radio buttons are data-driven - whatever is fetched from the backend service will be surfaced. The only exception is that when no configured payment methods are returned, we don’t show anything and treat it as “pay in cash" by default.
-
-For simplicity, I’ll skip the actual payment process and focus on the `Payment` component. Let’s say that after reading the React hello world doc and a couple of stackoverflow searches, you came up with some code like this:
+As a refresher, by the end of Chapter 7, our structure looked like this:
 
 ```tsx
-  export const Payment = ({ amount }: { amount: number }) => {
-    const [paymentMethods, setPaymentMethods] = useState<LocalPaymentMethod[]>(
-      []
-    );
-  
-    useEffect(() => {
-      const fetchPaymentMethods = async () => {
-        const url = "https://online-ordering.com/api/payment-methods";
-  
-        const response = await fetch(url);
-        const methods: RemotePaymentMethod[] = await response.json();
-  
-        if (methods.length > 0) {
-          const extended: LocalPaymentMethod[] = methods.map((method) => ({
-            provider: method.name,
-            label: `Pay with ${method.name}`,
-          }));
-          extended.push({ provider: "cash", label: "Pay in cash" });
-          setPaymentMethods(extended);
-        } else {
-          setPaymentMethods([]);
-        }
-      };
-  
-      fetchPaymentMethods();
-    }, []);
-  
-    return (
-      <div>
-        <h3>Payment</h3>
-        <div>
-          {paymentMethods.map((method) => (
-            <label key={method.provider}>
-              <input
-                type="radio"
-                name="payment"
-                value={method.provider}
-                defaultChecked={method.provider === "cash"}
-              />
-              <span>{method.label}</span>
-            </label>
-          ))}
-        </div>
-        <button>${amount}</button>
-      </div>
-    );
+export function PizzaShopApp() {
+  const [cartItems, setCartItems] = useState<string[]>([]);
+
+  const addItem = (item: string) => {
+    setCartItems([...cartItems, item]);
   };
-```
 
-
-The code above is pretty typical. You might have seen it in the get started tutorial somewhere. And it's not necessary bad. However, as we mentioned above, the code has mixed different concerns all in a single component and makes it a bit difficult to read.
-
-## The problem with the initial implementation
-
-The first issue I would like to address is how _busy_ the component is. By that, I mean `Payment` deals with different things and makes the code difficult to read as you have to switch context in your head as you read.
-
-In order to make any changes you have to comprehend how to initialise network request , how to map the data to a local format that the component can understand , how to render each payment method , and the rendering logic for `Payment` component itself .
-
-![Figure 11-7. Illustration in colors](ch11/payment-original-illustration.png)
-
-It's not a big problem at this stage for this simple example. However, as the code gets bigger and more complex, we'll need to refactoring them a bit.
-
-It’s good practice to split view and non-view code into separate places. The reason is, in general, views are changing more frequently than non-view logic. Also, as they deal with different aspects of the application, separating them allows you to focus on a particular self-contained module that is much more manageable when implementing new features.
-
-## The split of view and non-view code
-
-In React, we can use a custom hook to maintain _state_ of a component while keeping the component itself more or less _stateless_. We can use [Extract Function](http://refactoring.com/catalog/extractFunction.html) to create a function called `usePaymentMethods` (the prefix `use` is a convention in React to indicate the function is a hook and handling some states in it):
-
-```tsx
-  const usePaymentMethods = () => {
-    const [paymentMethods, setPaymentMethods] = useState<LocalPaymentMethod[]>(
-      []
-    );
-  
-    useEffect(() => {
-      const fetchPaymentMethods = async () => {
-        const url = "https://online-ordering.com/api/payment-methods";
-  
-        const response = await fetch(url);
-        const methods: RemotePaymentMethod[] = await response.json();
-  
-        if (methods.length > 0) {
-          const extended: LocalPaymentMethod[] = methods.map((method) => ({
-            provider: method.name,
-            label: `Pay with ${method.name}`,
-          }));
-          extended.push({ provider: "cash", label: "Pay in cash" });
-          setPaymentMethods(extended);
-        } else {
-          setPaymentMethods([]);
-        }
-      };
-  
-      fetchPaymentMethods();
-    }, []);
-  
-    return {
-      paymentMethods,
-    };
-  };
-```
-
-
-This returns a `paymentMethods` array (in type `LocalPaymentMethod`) as internal state and is ready to be used in _rendering_. So the logic in `Payment` can be simplified as:
-
-```tsx
-  export const Payment = ({ amount }: { amount: number }) => {
-    const { paymentMethods } = usePaymentMethods();
-  
-    return (
-      <div>
-        <h3>Payment</h3>
-        <div>
-          {paymentMethods.map((method) => (
-            <label key={method.provider}>
-              <input
-                type="radio"
-                name="payment"
-                value={method.provider}
-                defaultChecked={method.provider === "cash"}
-              />
-              <span>{method.label}</span>
-            </label>
-          ))}
-        </div>
-        <button>${amount}</button>
-      </div>
-    );
-  };
-```
-
-
-This helps relieve the pain in the `Payment` component. However, if you look at the block for iterating through `paymentMethods`, it seems a concept is missing here. In other words, this block deserves its own component. Ideally, we want each component to focus on, only one thing.
-
-## Data modelling to encapsulate logic
-
-So far, the changes we have made are all about splitting view and non-view code into different places. It works well. The hook handles data fetching and reshaping. Both `Payment` and `PaymentMethods` are relatively small and easy to understand.
-
-However, if you look closely, there is still room for improvement. To start with, in the pure function component `PaymentMethods`, we have a bit of logic to check if a payment method should be checked by default:
-
-```tsx
-  const PaymentMethods = ({
-    paymentMethods,
-  }: {
-    paymentMethods: LocalPaymentMethod[];
-  }) => (
-    <>
-      {paymentMethods.map((method) => (
-        <label key={method.provider}>
-          <input
-            type="radio"
-            name="payment"
-            value={method.provider}
-            defaultChecked={method.provider === "cash"}
-          />
-          <span>{method.label}</span>
-        </label>
-      ))}
-    </>
-  );
-```
-
-These test statements in a view can be considered a business logic leak (we have covered that in Chapter 8), and gradually they can be scatted in different places and make modification harder.
-
-Another point of potential logic leakage is in the data conversion where we fetch data:
-
-```tsx
-  const usePaymentMethods = () => {
-    const [paymentMethods, setPaymentMethods] = useState<LocalPaymentMethod[]>(
-      []
-    );
-  
-    useEffect(() => {
-      const fetchPaymentMethods = async () => {
-        const url = "https://online-ordering.com/api/payment-methods";
-  
-        const response = await fetch(url);
-        const methods: RemotePaymentMethod[] = await response.json();
-  
-        if (methods.length > 0) {
-          const extended: LocalPaymentMethod[] = methods.map((method) => ({
-            provider: method.name,
-            label: `Pay with ${method.name}`,
-          }));
-          extended.push({ provider: "cash", label: "Pay in cash" });
-          setPaymentMethods(extended);
-        } else {
-          setPaymentMethods([]);
-        }
-      };
-  
-      fetchPaymentMethods();
-    }, []);
-  
-    return {
-      paymentMethods,
-    };
-  };
-```
-
-
-Note the anonymous function inside `methods.map` does the conversion silently, and this logic, along with the `method.provider === "cash"` above can be extracted into a class.
-
-We could have a class `PaymentMethod` with the data and behaviour centralised into a single place:
-
-```tsx
-  class PaymentMethod {
-    private remotePaymentMethod: RemotePaymentMethod;
-  
-    constructor(remotePaymentMethod: RemotePaymentMethod) {
-      this.remotePaymentMethod = remotePaymentMethod;
-    }
-  
-    get provider() {
-      return this.remotePaymentMethod.name;
-    }
-  
-    get label() {
-      if(this.provider === 'cash') {
-        return `Pay in ${this.provider}`
-      }
-      return `Pay with ${this.provider}`;
-    }
-  
-    get isDefaultMethod() {
-      return this.provider === "cash";
-    }
-  }
-```
-
-
-With the class, I can define the default cash payment method:
-
-```tsx
-const payInCash = new PaymentMethod({ name: "cash" });
-```
-
-
-And during the conversion - after the payment methods are fetched from the remote service - I can construct the `PaymentMethod` object in-place. Or even extract a small function called `convertPaymentMethods`:
-
-```tsx
-  const convertPaymentMethods = (methods: RemotePaymentMethod[]) => {
-    if (methods.length === 0) {
-      return [];
-    }
-  
-    const extended: PaymentMethod[] = methods.map(
-      (method) => new PaymentMethod(method)
-    );
-    extended.push(payInCash);
-  
-    return extended;
-  };
-```
-
-
-Also, in the `PaymentMethods` component, we don’t use the `method.provider === "cash"`to check anymore, and instead call the `getter`:
-
-```tsx
-  export const PaymentMethods = ({ options }: { options: PaymentMethod[] }) => (
-    <>
-      {options.map((method) => (
-        <label key={method.provider}>
-          <input
-            type="radio"
-            name="payment"
-            value={method.provider}
-            defaultChecked={method.isDefaultMethod}
-          />
-          <span>{method.label}</span>
-        </label>
-      ))}
-    </>
-  );
-```
-
-
-Now we’re restructuring our `Payment` component into a bunch of smaller parts that work together to finish the work.
-
-![Figure 11-8. Refactored Payment with more parts that can be composed easily](ch11/refactoring-1.png)
-
-## The benefits of the new structure
-
-*   Having a class encapsulates all the logic around a payment method. It’s a domain object and doesn’t have any UI-related information. So testing and potentially modifying logic here is much easier than when embedded in a view.
-*   The new extracted component `PaymentMethods` is a pure function and only depends on a domain object array, which makes it super easy to test and reuse elsewhere. We might need to pass in a `onSelect` callback to it, but even in that case, it’s a pure function and doesn’t have to touch any external states.
-*   Each part of the feature is clear. If a new requirement comes, we can navigate to the right place without reading all the code.
-
-I have to make the example in this article sufficiently complex so that many patterns can be extracted. All these patterns and principles are there to help simplify our code's modifications.
-
-# Using polymorphism with OOP
-
-Let’s examine the theory here with some further changes to the application. The new requirement is that we want to offer an option for customers to donate a small amount of money as a tip to a charity along with their order.
-
-For example, if the order amount is $19.80, we ask if they would like to donate $0.20. And if a user agrees to donate it, we’ll show the total number on the button.
-
-![Figure 11-9. Donate to a charity](ch11/round-up.png)
-
-Before we make any changes, let's have a quick look at the current code structure. I prefer have different parts in their folder so it's easy for me to navigate when it grows bigger.
-
-```
-  src
-  ├── App.tsx
-  ├── components
-  │   ├── Payment.tsx
-  │   └── PaymentMethods.tsx
-  ├── hooks
-  │   └── usePaymentMethods.ts
-  ├── models
-  │   └── PaymentMethod.ts
-  └── types.ts
-```
-
-`App.tsx` is the main entry, it uses `Payment` component, and `Payment` uses `PaymentMethods` for rendering different payment options. The hook `usePaymentMethods` is responsible for fetching data from remote service and then convert it to a `PaymentMethod` domain object that is used to hold `label` and the `isDefaultChecked` flag.
-
-## Internal state: agree to donation
-
-To make these changes in `Payment`, we need a boolean state `agreeToDonate` to indicate whether a user selected the checkbox on the page.
-
-```tsx
-  const [agreeToDonate, setAgreeToDonate] = useState<boolean>(false);
-
-  const { total, tip } = useMemo(
-    () => ({
-      total: agreeToDonate ? Math.floor(amount + 1) : amount,
-      tip: parseFloat((Math.floor(amount + 1) - amount).toPrecision(10)),
-    }),
-    [amount, agreeToDonate]
-  );
-```
-
-
-The function `Math.floor` will round the number down so we can get the correct amount when the user selects `agreeToDonate`, and the difference between the rounded-up value and the original amount will be assigned to `tip`.
-
-And for the view, the JSX will be a checkbox plus a short description:
-
-```tsx
   return (
-    <div>
-      <h3>Payment</h3>
-      <PaymentMethods options={paymentMethods} />
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            onChange={handleChange}
-            checked={agreeToDonate}
-          />
-          <p>
-            {agreeToDonate
-              ? "Thanks for your donation."
-              : `I would like to donate ${tip} to charity.`}
-          </p>
-        </label>
-      </div>
-      <button>${total}</button>
+    <>
+      <h1>The Code Oven</h1>
+      <MenuList onAddMenuItem={addItem} />
+      <ShoppingCart cartItems={cartItems} />
+    </>
+  );
+}
+```
+
+And we assumed the data to be in this shape:
+
+```tsx
+const pizzas = [
+  "Margherita Pizza",
+  "Pepperoni Pizza",
+  "Veggie Supreme Pizza",
+  "Chicken BBQ Pizza",
+  "Spicy Meat Feast Pizza",
+  "Pasta Primavera",
+  "Caesar Salad",
+  "Chocolate Lava Cake",
+];
+```
+
+While this setup allows consumers to browse what the restaurant offers, it would be significantly more useful if we enabled online ordering. One immediate issue is that the pizzas lack price and description, crucial for supporting online orders. Descriptions are also vital as they list the ingredients, informing consumers of what's included.
+
+Moreover, it's not practical to define menu data within the JavaScript code. Typically, we'd have a service hosting such data, providing more detailed information.
+
+Suppose we have data hosted on a remote service at `https://api.code-oven.com/menus`, defined as:
+
+```tsx
+[
+  {
+    "id": "p1",
+    "name": "Margherita Pizza",
+    "price": 10.99,
+    "description": "Classic pizza with tomato sauce and mozzarella",
+    "ingredients": ["Tomato Sauce", "Mozzarella Cheese", "Basil", "Olive Oil"],
+    "allergyTags": ["Dairy"],
+    "calories": 250,
+    "category": "Pizza"
+  },
+  //...
+]
+```
+
+To bridge the gap between our app and this data, we need to define a type for the remote data:
+
+```ts
+type RemoteMenuItem = {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  ingredients: string[];
+  allergyTags: string[];
+  category: string;
+  calories: number
+}
+```
+
+Now, to integrate this remote menu data, we'll utilize `useEffect` to fetch the data, then display the items once fetched. We'll make these changes within the `MenuList` component:
+
+```tsx
+const MenuList = ({
+  onAddMenuItem,
+}: {
+  onAddMenuItem: (item: string) => void;
+}) => {
+  const [menuItems, setMenuItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      const result = await fetch('https://api.code-oven.com/menus');
+      const menuItems = await result.json();
+
+      setMenuItems(menuItems.map((item: RemoteMenuItem) => item.name));
+    }
+
+    fetchMenuItems();
+  }, [])
+
+  return (
+    <div data-testid="menu-list">
+      <ol>
+        {menuItems.map((item) => (
+          <li key={item}>
+            {item}
+            <button onClick={() => onAddMenuItem(item)}>Add</button>
+          </li>
+        ))}
+      </ol>
     </div>
   );
+};
 ```
 
-With these new changes, our code starts handling multiple things again. It’s essential to stay alert for potential mixing of view and non-view code. If you find any unnecessary mixing, look for ways to split them.
+Here, the `MenuList` component fetches a list of menu items from an external API upon the initial render and displays this list. Each item comes with an "Add" button, and clicking this button triggers the `onAddMenuItem` function, passed as a prop to `MenuList`, with the item name as its argument.
 
-Note that it's not a set-in-stone rule. Keep things all together nice and tidy for small and cohesive components, so you don't have to look in multiple places to understand the overall behaviour. Generally, you should be aware to avoid the component file growing too big to comprehend.
-
-## More changes about round-up logic
-
-The round-up looks good so far, and as the business expands to other countries, it comes with new requirements. The same logic doesn’t work in Japan market as 0.1 Yen is too small as a donation, and it needs to round up to the nearest hundred for the Japanese currency. And for Denmark, it needs to round up to the nearest tens.
-
-It sounds like an easy fix. All I need is a `countryCode` passed into the `Payment` component, right?
+By mapping the `RemoteMenuItem` to a string after fetching the data, we ensure minimal impact—our tests continue to pass. Now, we aim to surface the price and display the ingredients. However, given the potentially long list of ingredients, we'll only show the first three to avoid occupying too much screen space, also we want to use the lowercase of `category` and rename it to `type`. This adjustment means we'll slightly alter the `setMenuItems(menuItems.map(item => item.name))`. Additionally, we'll transition from rendering a string to rendering an object.
+Initially, we define a new type to better structure our data:
 
 ```tsx
-<Payment amount={3312} countryCode="JP" />;
+type MenuItem = {
+  id: string;
+  name: string;
+  price: number;
+  ingredients: string[];
+  type: string;
+}
 ```
 
-
-And because all of the logic is now defined in the `useRoundUp` hook, I can also pass the `countryCode` through to the hook.
+Here, `MenuItem` type includes properties for the item's `id`, `name`, `price`, `ingredients`, and `type`. Now, it's time to update our `MenuList` component to use this new type:
 
 ```tsx
-const useRoundUp = (amount: number, countryCode: string) => {
-  //...
+const MenuList = ({
+  onAddMenuItem,
+}: {
+  onAddMenuItem: (item: string) => void;
+}) => {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
 
-  const { total, tip } = useMemo(
-    () => ({
-      total: agreeToDonate
-        ? countryCode === "JP"
-          ? Math.floor(amount / 100 + 1) * 100
-          : Math.floor(amount + 1)
-        : amount,
-      //...
-    }),
-    [amount, agreeToDonate, countryCode]
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      const result = await fetch("http://api.code-oven.com/menus");
+      const menuItems = await result.json();
+
+      setMenuItems(
+        menuItems.map((item: RemoteMenuItem) => {
+          return {
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            type: item.category.toUpperCase(),
+            ingredients: item.ingredients.slice(0, 3),
+          };
+        })
+      );
+    };
+
+    fetchMenuItems();
+  }, []);
+
+  return (
+    <div data-testid="menu-list">
+      <ol>
+        {menuItems.map((item) => (
+          <li key={item.id}>
+            <h3>{item.name}</h3>
+            <span>${item.price}</span>
+            <div>
+              {item.ingredients.map((ingredient) => (
+                <span>{ingredient}</span>
+              ))}
+            </div>
+            <button onClick={() => onAddMenuItem(item.name)}>Add</button>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
+};
+```
+
+In the `MenuList` component, we've now made use of the `MenuItem` type in our `useState` hook. The `fetchMenuItems` function, triggered within the `useEffect`, reaches out to the API, fetches the menu items, and maps over them to transform the data into the desired `MenuItem` format. This transformation includes retaining only the first three items from the `ingredients` array for each item.
+
+Each `MenuItem` is then rendered as a list item within the component. We display the item's `name`, `price`, and iterate over the `ingredients` array to render each ingredient.
+
+While the code is functional, there's a concern: we've intertwined network requests, data mapping, and rendering logic within a single component. It's a sound practice to separate view-related code from non-view code, ensuring cleaner, more maintainable code.
+
+## Refactoring - Simplifying Through a Custom Hook
+
+We're no strangers to using custom hooks for data fetching. It's a practice that enhances readability and organizes logic neatly. In our scenario, extracting the `menuItems` state and the fetching logic into a separate hook will declutter the `MenuList` component. Let's create a hook named `useMenuItems`:
+
+```tsx
+const useMenuItems = () => {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      const result = await fetch(
+        "https://api.code-oven.com/menus"
+      );
+      const menuItems = await result.json();
+
+      setMenuItems(
+        menuItems.map((item: RemoteMenuItem) => {
+          // ... transform RemoteMenuItem to MenuItem
+        })
+      );
+    };
+
+    fetchMenuItems();
+  }, []);
+
+  return { menuItems };
+};
+```
+
+Within the `useMenuItems` hook, we initialize the `menuItems` state with an empty array. When the hook mounts, it triggers the `fetchMenuItems` function that fetches data from the specified URL. Following the fetch, a mapping operation is performed to convert each `RemoteMenuItem` object to a `MenuItem` object. The transformation details are omitted here but it's where we adapt the fetched data to the desired format. Subsequently, the transformed menu items are set to the `menuItems` state.
+
+Now, in our `MenuList` component, we can simply call `useMenuItems` to obtain the `menuItems` array:
+
+```tsx
+const MenuList = ({
+  onAddMenuItem,
+}: {
+  onAddMenuItem: (item: string) => void;
+}) => {
+  const { menuItems } = useMenuItems();
   //...
-};
-```
-
-You will notice that the if-else can go on and on as a new `countryCode` is added in the `useEffect` block. And for the `getTipMessage`, we need the same if-else checks as a different country may use other currency sign (instead of a dollar sign by default):
-
-```tsx
-const formatCheckboxLabel = (
-  agreeToDonate: boolean,
-  tip: number,
-  countryCode: string
-) => {
-  const currencySign = countryCode === "JP" ? "¥" : "$";
-
-  return agreeToDonate
-    ? "Thanks for your donation."
-    : `I would like to donate ${currencySign}${tip} to charity.`;
-};
-```
-
-One last thing we also need to change is the currency sign on the button:
-
-```tsx
-<button>
-  {countryCode === "JP" ? "¥" : "$"}
-  {total}
-</button>;
-```
-
-## The shotgun surgery problem
-
-This scenario is the famous “shotgun surgery” smell we see in many places (not particularly in React applications). This essentially says that we'll have to touch several modules whenever we need to modify the code for either a bug fixing or adding a new feature. And indeed, it’s easier to make mistakes with this many changes, especially when your tests are insufficient.
-
-![Figure 11-10. The shotgun surgery smell](ch11/shotgun-surgery.png)
-
-As illustrated above, the coloured lines indicate branches of country code checks that cross many files. In views, we’ll need to do separate things for different country code, while in hooks, we’ll need similar branches. And whenever we need to add a new country code, we’ll have to touch all these parts.
-
-For example, if we consider Denmark as a new country the business is expanding to, we’ll end up with code in many places like:
-
-```tsx
-const currencySignMap = {
-  JP: "¥",
-  DK: "Kr.",
-  AU: "$",
-};
-
-const getCurrencySign = (countryCode: CountryCode) =>
-  currencySignMap[countryCode];
-```
-
-One possible solution for the problem of having branches scattered in different places is to use polymorphism to replace these switch cases or table look-up logic. We can use [Extract Class](http://refactoring.com/catalog/extractClass.html) on those properties and then [Replace Conditional with Polymorphism](http://refactoring.com/catalog/replaceConditionalWithPolymorphism.html).
-
-## Polymorphism to the rescue
-
-The first thing we can do is examine all the variations to see what need to be extracted into a class. For example, different countries have different currency signs, so `getCurrencySign` can be extracted into a public interface. Also ,countries might have different round-up algorithms, thus `getRoundUpAmount` and `getTip` can go to the interface.
-
-```tsx
-export interface PaymentStrategy {
-  getRoundUpAmount(amount: number): number;
-
-  getTip(amount: number): number;
 }
 ```
 
-A concrete implementation of the strategy interface would be like following the code snippet: `PaymentStrategyAU`.
+This refactoring is quite beneficial. It redirects `MenuList` back to a streamlined state, reinstating its single responsibility. However, when we shift our focus to the `useMenuItems` hook, particularly the data mapping segment, a few operations are occurring. It fetches data, trims off some unused fields like `description` and `calories` from the remote data, although we might need these fields soon. Additionally, it encapsulates a logic to retain only the first three ingredients. Ideally, we'd like to centralize these transformation logics into a common location, ensuring a tidy and manageable code structure.
+
+## Transitioning to a Class-Based Model
+
+As touched upon in Chapter 8, employing the ACL (Abstraction, Composition, and Lifetime) pattern can be a strategic move for managing our data effectively. A significant step in this direction would be transitioning our `MenuItem` type definition into a class, hence centralizing all mapping logic within this class. This setup will serve as a dedicated hub for any future data shape alterations and related logic.
+
+Transitioning `MenuItem` from a type to a class is straightforward. We require a constructor to accept a `RemoteMenuItem` and some getter functions to access the data:
 
 ```tsx
-export class PaymentStrategyAU implements PaymentStrategy {
-  get currencySign(): string {
-    return "$";
+export class MenuItem {
+  private readonly _id: string;
+  private readonly _name: string;
+  private readonly _type: string;
+  private readonly _price: number;
+  private readonly _ingredients: string[];
+
+  constructor(item: RemoteMenuItem) {
+    this._id = item.id;
+    this._name = item.name;
+    this._price = item.price;
+    this._type = item.category;
+    this._ingredients = item.ingredients;
   }
 
-  getRoundUpAmount(amount: number): number {
-    return Math.floor(amount + 1);
+  // ... getter functions for id, name, price just returns the private fields
+
+  get type() {
+    return this._type.toLowerCase();
   }
 
-  getTip(amount: number): number {
-    return parseFloat((this.getRoundUpAmount(amount) - amount).toPrecision(10));
+  get ingredients() {
+    return this._ingredients.slice(0, 3);
   }
 }
 ```
 
-Note here the interface and classes have nothing to do with the UI directly. This logic can be shared in other places in the application or even moved to backend services (if the backend is written in Node, for example).
+In the `MenuItem` class, we define private readonly properties for id, name, type, price, and ingredients. The constructor initializes these properties using values from a `RemoteMenuItem` object passed to it. We then have getter methods for each property to provide read-only access to their values. Particularly, the `ingredients` getter returns only the first three items from the ingredients array.
 
-We could have subclasses for each country, and each has the country specific round-up logic. However, as function is first-class citizen in JavaScript, we can pass in the round-up algorithm into the strategy implementation to make the code less overhead without subclasses. And becaues we have only one implementation of the interface, we can use [Inline Class](http://refactoring.com/catalog/inlineClass.html) to reduce the single-implementation-interface.
+Though at a glance, this setup seems to have more code compared to a simple type definition, it effectively encapsulates the data and exposes it in a controlled manner. This aligns with the principles of immutability and encapsulation. The class structure's beauty is its capability to house behaviors—in our case, the slicing logic for ingredients is tucked neatly within the class.
 
-```tsx
-  export class CountryPayment {
-    private readonly _currencySign: string;
-    private readonly algorithm: RoundUpStrategy;
-  
-    public constructor(currencySign: string, roundUpAlgorithm: RoundUpStrategy) {
-      this._currencySign = currencySign;
-      this.algorithm = roundUpAlgorithm;
-    }
-  
-    get currencySign(): string {
-      return this._currencySign;
-    }
-  
-    getRoundUpAmount(amount: number): number {
-      return this.algorithm(amount);
-    }
-  
-    getTip(amount: number): number {
-      return calculateTipFor(this.getRoundUpAmount.bind(this))(amount);
-    }
-  }
-```
-
-
-As illustrated below, instead of depend on scattered logic in components and hooks, they now only rely on a single class `PaymentStrategy`. And at runtime, we can easily substitute one instance of `PaymentStrategy` for another (the red, green and blue square indicates different instances of `PaymentStrategy` class).
-
-![Figure 11-11. Extract class to encapsulate logic](ch11/strategy-pattern.png)
-
-And the `useRoundUp` hook, the code could be simplified as:
+With this new class in place, our `useMenuItems` hook becomes more streamlined:
 
 ```tsx
-  export const useRoundUp = (amount: number, strategy: PaymentStrategy) => {
-    const [agreeToDonate, setAgreeToDonate] = useState<boolean>(false);
-  
-    const { total, tip } = useMemo(
-      () => ({
-        total: agreeToDonate ? strategy.getRoundUpAmount(amount) : amount,
-        tip: strategy.getTip(amount),
-      }),
-      [agreeToDonate, amount, strategy]
-    );
-  
-    const updateAgreeToDonate = () => {
-      setAgreeToDonate((agreeToDonate) => !agreeToDonate);
+export const useMenuItems = () => {
+  //...
+
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      //...
+      setMenuItems(
+        menuItems.map((item: RemoteMenuItem) => {
+          return new MenuItem(item);
+        })
+      );
     };
-  
+
+    fetchMenuItems();
+  }, []);
+
+  return { menuItems };
+};
+```
+
+Now, the `useMenuItems` hook merely maps over the fetched menu items, creating a new instance of `MenuItem` for each, which significantly tidies up the transformation logic previously housed within the hook.
+
+## The Benefits of a Class-Based Model
+
+Transitioning to a class-based model from a simple type comes with a set of advantages that could serve our application well in the long run. Here's a breakdown:
+
+1. **Encapsulation**: A class brings related properties and methods under one roof, thus promoting clear structure and organization. It also restricts direct data access, fostering better control and data integrity.
+2. **Method Behavior**: For complex behaviors or operations associated with a menu item, a class provides a structured platform to define these methods, whether they relate to data manipulation or other business logic.
+3. **Inheritance and Polymorphism**: In case of a hierarchy or polymorphic behavior among menu items, a class structure is indispensable. It allows different menu item types to inherit from a common base class, overriding or extending behavior as needed.
+4. **Consistent Interface**: Classes ensure a consistent interface to the data, which is invaluable when multiple application parts interact with menu items.
+5. **Read-Only Properties**: Classes enable the definition of read-only properties, thereby controlling data mutation—a crucial aspect for maintaining data integrity and working with immutable data structures.
+
+As we transition into expanding our application's functionality with a shopping cart, it's crucial to approach this new section with the lessons learned from our data modeling exercise. This will ensure a structured and effective implementation, paving the way for a user-friendly online ordering experience.
+
+# Implementing the ShoppingCart Component
+
+As we venture into the implementation of the ShoppingCart component, we aim to provide a seamless interface for users to review their selected items before proceeding to checkout. Besides displaying the items, we also intend to reward our customers with some appealing discount policies.
+
+Initially, we have a rudimentary ShoppingCart component as shown below:
+
+```tsx
+export const ShoppingCart = ({ cartItems }: { cartItems: string[] }) => {
+  return (
+    <div data-testid="shopping-cart">
+      <ol>
+        {cartItems.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ol>
+      <button disabled={cartItems.length === 0}>Place My Order</button>
+    </div>
+  );
+};
+```
+
+The `ShoppingCart` component accepts a prop `cartItems` which is an array of strings. It returns a div containing an ordered list (`<ol>`), where each item in `cartItems` is rendered as a list item (`<li>`). Below the list, a "Place My Order" button is rendered, which is disabled if `cartItems` is empty.
+
+However, to enhance the user experience, it's crucial to display the price for each item and a total amount beneath the item list, yet above the "Place My Order" button. Here's how we can augment our component to fulfill these requirements:
+
+```tsx
+export const ShoppingCart = ({ cartItems }: { cartItems: MenuItem[] }) => {
+  const totalPrice = cartItems.reduce((acc, item) => (acc += item.price), 0);
+
+  return (
+    <div data-testid="shopping-cart" className="shopping-cart">
+      <ol>
+        {cartItems.map((item) => (
+          <li key={item.id}>
+            <h3>{item.name}</h3>
+            <span>${item.price}</span>
+          </li>
+        ))}
+      </ol>
+      <div>Total: ${totalPrice}</div>
+      <button disabled={cartItems.length === 0}>Place My Order</button>
+    </div>
+  );
+};
+```
+
+The `ShoppingCart` component is now equipped to accept a `cartItems` prop, which comprises an array of `MenuItem` objects (instead of a simple string). To compute the total price of items in the cart, we employ the `reduce` method. This method iterates over each item, accumulating their prices to present a total. The component then returns a JSX markup that renders a list of cart items, each displaying its name and price.
+
+This revamped `ShoppingCart` component not only enhances the clarity of the order for users but also lays down a foundation for introducing discount policies, which we can explore as we continue refining our application.
+
+## Applying Discounts to Items
+
+Let's assume we have different discount policies for different types of menu items. For instance, pizzas with more than three toppings receive a 10 percent discount, while large pastas enjoy a 15 percent discount. 
+
+We initially attempt to extend the `MenuItem` class with a new field called `calculateDiscount`:
+
+```tsx
+export class MenuItem {
+  //... the private fields
+
+  constructor(item: RemoteMenuItem) {
+    //... assignment
+  }
+
+  get calculateDiscount() {
+    return this.type === 'pizza' && this.toppings >= 3 ? this.price * 0.1 : 0;
+  }
+}
+```
+
+However, we encounter a problem since pastas don't have toppings, leading to a type error. To resolve this, we first extract an interface, and then have `Pizza` and `Pasta` classes implement this interface:
+
+```tsx
+export interface IMenuItem {
+  id: string;
+  name: string;
+  type: string;
+  price: number;
+  ingredients: string[];
+
+  calculateDiscount(): number;
+}
+```
+
+Next, we define an abstract class to implement the interface, allowing `PizzaMenuItem` and `PastaMenuItem` to extend the abstract class respectively:
+
+```ts
+export abstract class AbstractMenuItem implements IMenuItem {
+  private readonly _id: string;
+  private readonly _name: string;
+  private readonly _price: number;
+  private readonly _ingredients: string[];
+
+  protected constructor(item: RemoteMenuItem) {
+    this._id = item.id;
+    this._name = item.name;
+    this._price = item.price;
+    this._ingredients = item.ingredients;
+  }
+
+  static from(item: IMenuItem): RemoteMenuItem {
     return {
-      total,
-      tip,
-      agreeToDonate,
-      updateAgreeToDonate,
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      category: item.type,
+      ingredients: item.ingredients,
     };
-  };
+  }
+
+  //... the getter functions
+
+  abstract calculateDiscount(): number;
+}
 ```
 
+In the `AbstractMenuItem` class, we introduced a static `from` method. This method takes an `IMenuItem` instance and transforms it into a `RemoteMenuItem` instance, preserving the necessary fields for our application.
 
-In the `Payment` component, we pass the strategy from `props` through to the hook:
+The method `calculateDiscount` is declared as an abstract method, requiring its child classes to implement the actual discount calculation. 
+
+Note: Abstract Class
+An abstract class serves as a base class for other classes and cannot be instantiated on its own. It's a way to define a common interface and/or implementation for a set of derived classes. Abstract classes often contain abstract methods, which are declared without implementations, leaving it to derived classes to provide the specific implementations. By doing so, abstract classes enable a common structure while ensuring that certain methods are implemented in derived classes, promoting a consistent behavior across all derived types. They are a key feature in object-oriented programming, supporting polymorphism, and encapsulation.
+
+For a `PizzaMenuItem`, it simply extends `AbstractMenuItem` and implements `calculateDiscount`:
 
 ```tsx
-  export const Payment = ({
-    amount,
-    strategy = new PaymentStrategy("$", roundUpToNearestInteger),
-  }: {
-    amount: number;
-    strategy?: PaymentStrategy;
-  }) => {
-    const { paymentMethods } = usePaymentMethods();
-  
-    const { total, tip, agreeToDonate, updateAgreeToDonate } = useRoundUp(
-      amount,
-      strategy
-    );
-  
-    return (
-      <div>
-        <h3>Payment</h3>
-        <PaymentMethods options={paymentMethods} />
-        <DonationCheckbox
-          onChange={updateAgreeToDonate}
-          checked={agreeToDonate}
-          content={formatCheckboxLabel(agreeToDonate, tip, strategy)}
-        />
-        <button>{formatButtonLabel(strategy, total)}</button>
-      </div>
-    );
-  };
+export class PizzaMenuItem extends AbstractMenuItem {
+  private readonly toppings: number;
+
+  constructor(item: RemoteMenuItem, toppings: number) {
+    super(item);
+    this.toppings = toppings;
+  }
+
+  calculateDiscount(): number {
+    return this.toppings >= 3 ? this.price * 0.1 : 0;
+  }
+}
 ```
 
+The `PizzaMenuItem` class extends `AbstractMenuItem`, inheriting its properties and methods. It defines a private readonly property `toppings` to hold the number of toppings. In the constructor, it takes two arguments: a `RemoteMenuItem` object `item` and a number `toppings`. It calls the constructor of `AbstractMenuItem` with `item` using `super(item)`, and initializes `this.toppings` with the `toppings` argument. The `calculateDiscount` method is implemented to return a 10% discount if the number of toppings is 3 or more, otherwise, it returns 0. This method overrides the abstract `calculateDiscount` method from `AbstractMenuItem`.
 
-And I then did a bit clean up to extract a few helper functions for generating the labels:
+Similarly, we create a `PastaMenuItem` class:
 
 ```tsx
-  export const formatCheckboxLabel = (
-    agreeToDonate: boolean,
-    tip: number,
-    strategy: CountryPayment
-  ) => {
-    return agreeToDonate
-      ? "Thanks for your donation."
-      : `I would like to donate ${strategy.currencySign}${tip} to charity.`;
+export class PastaItem extends AbstractMenuItem {
+  private readonly servingSize: string;
+
+  constructor(item: RemoteMenuItem, servingSize: string) {
+    super(item);
+    this.servingSize = servingSize;
+  }
+
+  calculateDiscount(): number {
+    return this.servingSize === "large" ? this.price * 0.15 : 0;
+  }
+}
+```
+
+The relationship of these classes can be visualised as in Figure-11.7 below.
+
+![Figure 11-7. Model classes](ch11/model-initial.png)
+
+The abstract class `AbstractMenuItem` implements `IMenuItem` interface, and uses `RemoteMenuItem`. Both `PizzaItem` and `PastaItem` are extending `AbstractMenuItem` and has their own logic for calculate the discount.
+
+In the `MenuList` component, when adding items to the shopping cart, we create instances of the right class based on the item type:
+
+```tsx
+export const MenuList = ({}) => {
+  //... 
+  const [toppings, setToppings] = useState([]);
+  const [size, setSize] = useState<string>("small");
+
+  const handleAddMenuItem = (item: IMenuItem) => {
+    const remoteItem = AbstractMenuItem.from(item);
+    if (item.type === "pizza") {
+      onAddMenuItem(new PizzaMenuItem(remoteItem, toppings.length));
+    } else if (item.type === "pasta") {
+      onAddMenuItem(new PastaItem(remoteItem, size));
+    } else {
+      onAddMenuItem(item);
+    }
+  };
+
+  return (
+    //...
+  );
+};
+```
+
+The `handleAddMenuItem` function transforms the `IMenuItem` object `item` into a `RemoteMenuItem` object using the `AbstractMenuItem.from(item)` method. Following this, it checks the `type` property of the `item` to determine if it's a "pizza" or "pasta". If it's a "pizza", a new `PizzaMenuItem` instance is created using `remoteItem` and the selected number of toppings, and this new item is added to the cart via the `onAddMenuItem` function. If the item is neither a "pizza" nor "pasta", the original item is added to the cart directly through the `onAddMenuItem` function.
+
+Lastly, within the `ShoppingCart` component, we calculate the total discount value similarly to how we calculated the total price, and use it for rendering:
+
+```tsx
+export const ShoppingCart = ({ cartItems }: { cartItems: IMenuItem[] }) => {
+  const totalPrice = cartItems.reduce((acc, item) => (acc += item.price), 0);
+  const totalDiscount = cartItems.reduce(
+    (acc, item) => (acc += item.calculateDiscount()),
+    0
+  );
+
+  return (
+    <div data-testid="shopping-cart" className="shopping-cart">
+      {/* rendering the list */}
+      <div>Total Discount: ${totalDiscount}</div>
+      <div>Total: ${totalPrice - totalDiscount}</div>
+      <button disabled={cartItems.length === 0}>Place My Order</button>
+    </div>
+  );
+};
+```
+
+The `ShoppingCart` component calculates `totalPrice` by iterating over the `cartItems` array and summing up the price of each item. Similarly, it calculates `totalDiscount` by summing up the discounts for each item, obtained by calling `calculateDiscount()` method on each item. In the returned JSX, it renders a list (assumed to be handled in the commented out portion), and displays the `totalDiscount` and the final total price (which is `totalPrice - totalDiscount`) below the list.
+
+## Exploring the Strategy Pattern
+
+Suppose it's a bustling Friday night, and we wish to offer a special discount on all pizzas and drinks. However, we don't intend to apply additional discounts on items already discounted — for instance, a pizza with four toppings should only receive this specific special discount.
+
+Handling such arbitrary discounts can be complex, necessitating a decoupling of the calculation logic from the item type. Moreover, we'd like the flexibility to remove these discounts post-Friday or after a certain period. To achieve this, we'll extract the logic into a separate entity, defining a strategy interface as follows:
+
+```ts
+export interface IDiscountStrategy {
+  calculate(price: number): number;
+}
+```
+
+This interface provides a blueprint for different discount strategies. For example, we could have a strategy with no discount:
+
+```tsx
+class NoDiscountStrategy implements IDiscountStrategy {
+  calculate(price: number): number {
+    return 0;
+  }
+}
+```
+
+The `NoDiscountStrategy` class implements the `IDiscountStrategy` interface with a `calculate` method that takes a price as input and returns zero, signifying no discount is applied. Or a special discount strategy, offering a 15% discount:
+
+```ts
+class SpecialDiscountStrategy implements IDiscountStrategy {
+  calculate(price: number): number {
+    return price * 0.15;
+  }
+}
+```
+
+To utilize these strategies, we need to slightly modify the `IMenuItem` interface:
+
+```ts
+export interface IMenuItem {
+  // ... other fields
+  discountStrategy: IDiscountStrategy;
+}
+```
+
+We added a discountStrategy filed int `IMenuItem` interface. With this setup, our `AbstractMenuItem` class will no longer remain abstract - so we renamed it to `BaseMenuItem` instead. Instead, it will incorporate a setter for the discount strategy and implement the discount calculation:
+
+```tsx
+export class BaseMenuItem implements IMenuItem {
+  // ... other fields 
+  private _discountStrategy: IDiscountStrategy;
+
+  constructor(item: RemoteMenuItem) {
+    // ... other fields 
+    this._discountStrategy = new NoDiscountStrategy();
+  }
+
+  // ... other getters
+
+  set discountStrategy(strategy: IDiscountStrategy) {
+    this._discountStrategy = strategy;
+  }
+
+  calculateDiscount() {
+    return this._discountStrategy.calculate(this.price);
+  }
+}
+```
+
+The `BaseMenuItem` class now implements the `IMenuItem` interface and encapsulates a discount strategy, initially set to `NoDiscountStrategy`. It defines a setter to update the discount strategy, and a `calculateDiscount` method which delegates the discount calculation to the encapsulated discount strategy's `calculate` method, passing the item's price as an argument.
+
+The figure 11-8. should give you a much cleaner look of what the relations are:
+
+![Figure 11-8. The class diagram](ch11/classes-final.png)
+
+As observed, `BaseMenuItem` implements the `IMenuItem` interface and utilizes `IDiscountStrategy`. There are multiple implementations of the `IDiscountStrategy` interface for specific discount algorithms, and several classes extend the `BaseMenuItem` class too. The type `RemoteMenuItem` is used by all the classes implements `IMenuItem` interface as well.
+
+Now, when we need to apply a particular strategy, it can be done effortlessly like so:
+
+```tsx
+export const MenuList = ({
+  onAddMenuItem,
+}: {
+  onAddMenuItem: (item: IMenuItem) => void;
+}) => {
+  // ...
+  const handleAddMenuItem = (item: IMenuItem) => {
+    if (isTodayFriday()) {
+      item.discountStrategy = new SpecialDiscountStrategy();
+    }
+
+    onAddMenuItem(item);
   };
 ```
 
+In the `MenuList` component, the `handleAddMenuItem` function checks if today is Friday using the `isTodayFriday` function. If it is, it sets the `discountStrategy` of the `item` to a new instance of `SpecialDiscountStrategy` before passing the `item` to the `onAddMenuItem` function, which is received as a prop. This way, a special discount is applied to the menu item on Fridays.
 
-I hope you have noticed that we’re trying to directly extract non-view code into separate places or abstract new mechanisms to reform it to be more modular.
+This setup grants us the desired flexibility. For instance, in the `handleAddMenuItem` function, depending on whether it's Friday or the item is a pizza, we can easily switch the discount strategy:
 
-You can think of it this way: the React view is only one of the consumers of your non-view code. For example, if you would build a new interface - maybe with Vue or Angular or even a command line tool - how much code can you reuse with your current implementation?
+```tsx
+const handleAddMenuItem = (item: IMenuItem) => {
+  if (isTodayFriday()) {
+    item.discountStrategy = new SpecialDiscountStrategy();
+  }
 
-## The benefits of having these layers
+  if(item.type === 'pizza') {
+    item.discountStrategy = new PizzaDiscountStrategy();
+  }
+  
+  onAddMenuItem(item);
+};
+```
 
-As demonstrated above, these layers brings us many advantages:
+In this function `handleAddMenuItem`, depending on certain conditions, a different discount strategy is applied to the `item` before it's passed to the `onAddMenuItem` function. Initially, it checks if today is Friday using `isTodayFriday()` and if true, it assigns a new instance of `SpecialDiscountStrategy` to `item.discountStrategy`. However, if the `item` is of type 'pizza', irrespective of the day, it overwrites the `item.discountStrategy` with a new instance of `PizzaDiscountStrategy`.
 
-1.  Enhanced maintainability: by separating a component into distinct parts, it is easier to locate and fix defects in specific parts of the code. This can save time and reduce the risk of introducing new bugs while making changes.
-2.  Increased modularity: the layered structure is more modular, which can make it easier to reuse code and build new features. Even in each layer, take views for example, tend to be more composable.
-3.  Enhanced readability: it's much easier to understand and follow the logic of the code. This can be especially helpful for other developers who are reading and working with the code. That's the core of making changes to the codebase.
-4.  Improved scalability: with reduced complixity in each individual module, the application is often more scalable, as it is easier to add new features or make changes without affecting the entire system. This can be especially important for large, complex applications that are expected to evolve over time.
-5.  Migrate to other techstack: if we have to (even very unlikely in most projects), we can replace the view layer without changing the underlying models and logic. All because the domain logic is encapsulated in pure JavaScript (or TypeScript) code and isn't aware of the existence of views.
+This approach keeps our discount logic modular and easy to adjust, catering to different scenarios with minimal code modification. As we're extracting new logic components - hooks, data models, domain logic (discount strategies) and views out of the application code, we're evolving into a layered frontend application.
+
+# Delving into Layered Architecture
+
+Our application has transitioned wonderfully to a more robust state, with clear, understandable, and modifiable logic, which is now also more test-friendly.
+
+A further refinement I envision is relocating the logic present in `ShoppingCart` to a custom hook:
+
+```tsx
+export const useShoppingCart = (items: IMenuItem[]) => {
+  const totalPrice = useMemo(
+    () => items.reduce((acc, item) => (acc += item.price), 0),
+    [items]
+  );
+
+  const totalDiscount = useMemo(
+    () => items.reduce((acc, item) => (acc += item.calculateDiscount()), 0),
+    [items]
+  );
+
+  return {
+    totalPrice,
+    totalDiscount,
+  };
+};
+```
+
+The `useShoppingCart` hook accepts an array of `IMenuItem` objects and computes two values: `totalPrice` and `totalDiscount`. `totalPrice` is calculated by reducing over the items, summing up their price property. Similarly, `totalDiscount` is calculated by reducing over the items, summing up the discount for each item obtained by calling `item.calculateDiscount()`. Both calculations are wrapped in `useMemo` to ensure they are only recomputed when the `items` array changes.
+
+With this modification, `ShoppingCart` becomes elegantly simplified and can easily utilize these values:
+
+```tsx
+export const ShoppingCart = ({ cartItems }: { cartItems: IMenuItem[] }) => {
+  const { totalPrice, totalDiscount } = useShoppingCart(cartItems);
+
+  return (
+    {/* JSX for the rendering logic */}
+  );
+};
+```
+
+An alternative approach would be employing the context and `useReducer` hook to manage all logic within context and hooks, however, since we explored that in Chapter 8, I'll leave further exploration to you.
+
+Our application now exhibits a fresh structural anatomy:
+
+```tsx
+src
+├── App.tsx
+├── hooks
+│   ├── useMenuItems.ts
+│   └── useShoppingCart.ts
+├── models
+│   ├── BaseMenuItem.ts
+│   ├── IMenuItem.ts
+│   ├── PastaItem.ts
+│   ├── PizzaMenuItem.ts
+│   ├── RemoteMenuItem.ts
+│   └── strategy
+│       ├── IDiscountStrategy.ts
+│       ├── NoDiscountStrategy.ts
+│       ├── SpecialDiscountStrategy.ts
+│       └── TenPercentageDiscountStrategy.ts
+└── views
+    ├── MenuList.tsx
+    └── ShoppingCart.tsx
+```
+
+Within the views, we have primarily pure TSX rendering straightforward tags. These views leverage hooks for state and side effect management. Meanwhile, the models encompass business logic, algorithms for toggling between different discount strategies, and data shape transformations, among other functionalities.
+
+![Figure 11-2. Final look and feel of the application](ch11/code-oven.png)
+
+## Advantages of Layered Architecture
+
+The layered architecture delineated above confers numerous benefits:
+
+1. **Enhanced Maintainability**: The division of a component into distinct segments facilitates easier identification and rectification of defects in specific code sections, thus minimizing time spent and reducing the likelihood of engendering new bugs during modifications.
+2. **Increased Modularity**: This architecture is inherently more modular, promoting code reuse and simplifying the addition of new features. Even within each layer, such as views, the code tends to be more composable.
+3. **Enhanced Readability**: The logic within the code becomes significantly more understandable and navigable, an asset not only for the original developer but also for others who may interact with the codebase. This clarity is central to effecting changes in the code.
+4. **Improved Scalability**: The reduced complexity within each module renders the application more scalable, making it easier to introduce new features or alterations without impacting the entire system—a critical advantage for large, complex applications projected to evolve over time.
+5. **Tech-stack Migration**: Albeit unlikely in most projects, should the need arise, the view layer can be replaced without altering the underlying models and logic, thanks to the encapsulation of domain logic in pure JavaScript (or TypeScript) code, oblivious to the views' existence.
+
+We elucidates the transition of our application to a Layered Architecture, enhancing its maintainability, modularity, readability, scalability, and potential for tech-stack migration. By segregating logic, refining the `ShoppingCart` through a custom hook, and organizing the application into distinct layers, we've significantly bolstered the code's structure and ease of management. This architectural approach not only streamlines the current codebase but also lays a solid foundation for future expansions and refinements.
 
 # Summary
 
 Building React application, or a frontend application with React as its view, should not be treated as a new type of software. Most of the patterns and principles for building the traditional user interface still apply. Even the patterns for constructing a headless service in the backend are also valid in the frontend field. We can use layers in the frontend and have the user interface as thin as possible, sink the logic into a supporting model layer, and data access into another.
 
 The benefit of having these layers in frontend applications is that you only need to understand one piece without worrying about others. Also, with the improvement of reusability, making changes to existing code would be relatively more manageable than before.
+
+In next chapter, we'll look into an end-to-end journey of implemeneting a application from scrath, using the user acceptance test-driven development approach, doing refactoring and clean up along the way, and always keep our code as clean as we could.
