@@ -1,0 +1,12 @@
+.searchBox {
+  margin: 1rem 0;
+}
+
+.searchBox input {
+  width: 90%;
+  margin: auto;
+  box-sizing: border-box;
+  padding: 0.4rem 1rem;
+  font-size: 1.2rem;
+  display: flex;
+}

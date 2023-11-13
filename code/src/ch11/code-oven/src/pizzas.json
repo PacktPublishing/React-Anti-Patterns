@@ -1,0 +1,112 @@
+[
+  {
+    "id": "p1",
+    "name": "Margherita Pizza",
+    "price": 10.99,
+    "description": "Classic pizza with tomato sauce and mozzarella",
+    "ingredients": ["Tomato Sauce", "Mozzarella Cheese", "Basil", "Olive Oil"],
+    "allergyTags": ["Dairy"],
+    "calories": 250,
+    "category": "Pizza"
+  },
+  {
+    "id": "p2",
+    "name": "Pepperoni Pizza",
+    "price": 12.99,
+    "description": "Spicy pepperoni with tomato sauce and cheese",
+    "ingredients": ["Tomato Sauce", "Mozzarella Cheese", "Pepperoni"],
+    "allergyTags": ["Dairy", "Pork"],
+    "calories": 300,
+    "category": "Pizza"
+  },
+  {
+    "id": "p3",
+    "name": "Veggie Supreme Pizza",
+    "price": 14.99,
+    "description": "Loaded with fresh vegetables and mozzarella",
+    "ingredients": ["Tomato Sauce", "Mozzarella Cheese", "Bell Peppers", "Mushrooms", "Olives", "Onions"],
+    "allergyTags": ["Dairy"],
+    "calories": 200,
+    "category": "Pizza"
+  },
+  {
+    "id": "p4",
+    "name": "Chicken BBQ Pizza",
+    "price": 15.99,
+    "description": "Grilled chicken with BBQ sauce and red onions",
+    "ingredients": ["BBQ Sauce", "Mozzarella Cheese", "Grilled Chicken", "Red Onions"],
+    "allergyTags": ["Dairy"],
+    "calories": 350,
+    "category": "Pizza"
+  },
+  {
+    "id": "p5",
+    "name": "Spicy Meat Feast Pizza",
+    "price": 16.99,
+    "description": "A blend of spicy meats with hot peppers",
+    "ingredients": ["Tomato Sauce", "Mozzarella Cheese", "Pepperoni", "Sausage", "Hot Peppers"],
+    "allergyTags": ["Dairy", "Pork", "Spicy"],
+    "calories": 400,
+    "category": "Pizza"
+  },
+  {
+    "id": "p6",
+    "name": "Pasta Primavera",
+    "price": 8.99,
+    "description": "Pasta with seasonal vegetables and olive oil",
+    "ingredients": ["Pasta", "Seasonal Vegetables", "Olive Oil", "Parmesan Cheese"],
+    "allergyTags": ["Gluten", "Dairy"],
+    "calories": 350,
+    "category": "Pasta"
+  },
+  {
+    "id": "p9",
+    "name": "Spaghetti Carbonara",
+    "price": 10.99,
+    "description": "Classic spaghetti with pancetta, eggs, and parmesan",
+    "ingredients": ["Spaghetti", "Pancetta", "Eggs", "Parmesan Cheese"],
+    "allergyTags": ["Gluten", "Dairy", "Pork"],
+    "calories": 400,
+    "category": "Pasta"
+  },
+  {
+    "id": "p7",
+    "name": "Caesar Salad",
+    "price": 7.99,
+    "description": "Crisp romaine lettuce with creamy Caesar dressing",
+    "ingredients": ["Romaine Lettuce", "Caesar Dressing", "Croutons", "Parmesan Cheese"],
+    "allergyTags": ["Gluten", "Dairy", "Egg"],
+    "calories": 150,
+    "category": "Salad"
+  },
+  {
+    "id": "p10",
+    "name": "Greek Salad",
+    "price": 8.99,
+    "description": "Fresh veggies with feta cheese and olives",
+    "ingredients": ["Tomatoes", "Cucumbers", "Red Onions", "Feta Cheese", "Olives"],
+    "allergyTags": ["Dairy"],
+    "calories": 150,
+    "category": "Salad"
+  },
+  {
+    "id": "p8",
+    "name": "Chocolate Lava Cake",
+    "price": 5.99,
+    "description": "Rich chocolate cake with a molten center",
+    "ingredients": ["Chocolate", "Sugar", "Eggs", "Flour", "Butter"],
+    "allergyTags": ["Gluten", "Dairy", "Egg"],
+    "calories": 450,
+    "category": "Dessert"
+  },
+  {
+    "id": "p11",
+    "name": "Tiramisu",
+    "price": 6.99,
+    "description": "Italian dessert with coffee-soaked ladyfingers and mascarpone cheese",
+    "ingredients": ["Ladyfingers", "Coffee", "Mascarpone Cheese", "Cocoa Powder"],
+    "allergyTags": ["Gluten", "Dairy"],
+    "calories": 350,
+    "category": "Dessert"
+  }
+]

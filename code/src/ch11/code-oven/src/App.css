@@ -1,0 +1,305 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: #fefefe;
+}
+
+:root {
+  --text-color: #333;
+}
+
+a {
+  color: var(--text-color);
+}
+
+.app {
+  width: 720px;
+  margin: 0 auto;
+  padding: 2rem 4rem;
+  background: white;
+  min-height: 100vh;
+  font-family: 'Roboto Slab', serif;
+}
+
+h1 {
+  margin: 2rem 0;
+  color: chocolate;
+}
+
+.container {
+  display: flex;
+  gap: 1rem;
+}
+
+.navigator {
+  position: fixed;
+  width: 150px;
+  background: #efefef;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navigator ol li {
+  list-style: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.navigator ol li:hover {
+  background: white;
+}
+
+.error-page {
+  font-size: 1.5rem;
+  color: red;
+}
+
+/*
+.menu-list section {
+  margin: 0 0 1rem 0;
+}
+
+.menu-list h2 {
+  margin: 0 0 1rem 0;
+  text-transform: uppercase;
+}
+
+.menu-list ol {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.menu-list ol li {
+  flex: 1;
+  flex-basis: calc(50% - 4rem);
+  list-style: none;
+  border-radius: 8px;
+  border: 1px solid #efefef;
+  padding: 1rem;
+  background: white;
+}
+
+.menu-list ol li h3 {
+  margin: 0 0 0.5rem 0;
+}
+
+.menu-list ol li p {
+  color: #666;
+  margin: 0 0 2.5rem 0;
+}
+
+.menu-list li {
+  position: relative;
+}
+
+.menu-list button {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+
+  padding: 0.2rem 0.5rem;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+*/
+
+
+#root {
+  width: 1000px;
+  margin: auto;
+}
+
+.main {
+  display: flex;
+  gap: 2rem;
+  padding: 0 2rem;
+}
+
+.menu-list {
+  flex: 2;
+}
+
+/*
+.shopping-cart h2 {
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  color: #444;
+}
+
+.shopping-cart {
+  background: #efefef;
+  border: 1px solid #efefef;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  padding: 1rem;
+}
+
+.shopping-cart ol li {
+  list-style: none;
+  padding-bottom: 0.5rem;
+}
+
+.shopping-cart button {
+  padding: 0.2rem 0.5rem;
+}
+
+.shopping-cart .number {
+  padding: 0.4rem 0;
+}*/
+
+.shopping-cart {
+  flex: 1;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.shopping-cart h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+}
+
+.shopping-cart ol {
+  padding-left: 0;
+  margin-bottom: 20px;
+}
+
+.shopping-cart li {
+  list-style: none;
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shopping-cart li:last-child {
+  border-bottom: none;
+}
+
+.shopping-cart li h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.shopping-cart li span {
+  font-size: 16px;
+  color: #555;
+}
+
+.shopping-cart .number {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.shopping-cart button {
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  background-color: #e23e57;
+  width: 100%;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.shopping-cart button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.shopping-cart button:hover:not(:disabled) {
+  background-color: #e23e57;
+}
+
+/* menu list */
+
+.menu-list {
+  flex: 3;
+  border-radius: 8px;
+  margin: auto;
+  background-color: #ffffff;
+}
+
+.menu-list ol {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.menu-list ol li {
+  flex: 1;
+  flex-basis: calc(50% - 4rem);
+  list-style: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  background: white;
+}
+
+.menu-list h3 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.menu-list span {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 5px;
+  display: inline-block;
+}
+
+.menu-list div {
+  margin-bottom: 10px;
+}
+
+.menu-list div span {
+  background-color: #f0f0f0;
+  padding: 5px;
+  margin-right: 5px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.menu-list button {
+  border-radius: 4px;
+  padding: 10px 20px;
+  background-color: #ffffff;
+  color: #333;
+  border: 1px solid #333;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-left: auto;
+}
+
+.menu-list button:hover {
+  background-color: #e23e57;
+  color: white;
+  border: 1px solid white;
+}

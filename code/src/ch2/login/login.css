@@ -1,0 +1,15 @@
+.login-form {
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.field {
+  padding: 0.5rem;
+}
+
+.field input {
+  border: 1px solid #666;
+  padding: 0.5rem;
+  border-radius: 3px;
+}

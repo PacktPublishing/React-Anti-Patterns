@@ -1,0 +1,22 @@
+.my-shop {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.product {
+  display: flex;
+  padding: 1rem;
+  border: 1px solid #666;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.product img {
+  flex: 1;
+  max-width: 100px;
+}
+
+.product > div {
+  flex: 1;
+  margin-left: 1rem;
+}

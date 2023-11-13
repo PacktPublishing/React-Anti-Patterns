@@ -1,0 +1,16 @@
+article {
+    margin: 0.5rem 0;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+article.light {
+
+}
+
+article.dark {
+    background: #333;
+    border: 1px solid #666;
+    color: white;
+}

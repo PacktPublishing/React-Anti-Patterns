@@ -1,0 +1,43 @@
+{
+  "base": "stations",
+  "clouds": {
+    "all": 0
+  },
+  "cod": 200,
+  "coord": {
+    "lat": -37.8142,
+    "lon": 144.9632
+  },
+  "dt": 1697849162,
+  "id": 2158177,
+  "main": {
+    "feels_like": 20.75,
+    "humidity": 56,
+    "pressure": 1009,
+    "temp": 20.00,
+    "temp_max": 23.46,
+    "temp_min": 18.71
+  },
+  "name": "Melbourne",
+  "sys": {
+    "country": "AU",
+    "id": 2041285,
+    "sunrise": 1697830052,
+    "sunset": 1697877717,
+    "type": 2
+  },
+  "timezone": 39600,
+  "visibility": 10000,
+  "weather": [
+    {
+      "description": "clear sky",
+      "icon": "01d",
+      "id": 800,
+      "main": "Clear"
+    }
+  ],
+  "wind": {
+    "deg": 30,
+    "speed": 5.66
+  }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "p1",
+    "name": "Margherita Pizza",
+    "price": 10.99,
+    "description": "Classic pizza with tomato sauce and mozzarella"
+  },
+  {
+    "id": "p2",
+    "name": "Pepperoni Pizza",
+    "price": 12.99,
+    "description": "Spicy pepperoni with tomato sauce and cheese"
+  },
+  {
+    "id": "p3",
+    "name": "Veggie Supreme Pizza",
+    "price": 14.99,
+    "description": "Loaded with fresh vegetables and mozzarella"
+  },
+  {
+    "id": "p4",
+    "name": "Chicken BBQ Pizza",
+    "price": 15.99,
+    "description": "Grilled chicken with BBQ sauce and red onions"
+  },
+  {
+    "id": "p5",
+    "name": "Spicy Meat Feast Pizza",
+    "price": 16.99,
+    "description": "A blend of spicy meats with hot peppers"
+  },
+  {
+    "id": "p6",
+    "name": "Pasta Primavera",
+    "price": 8.99,
+    "description": "Pasta with seasonal vegetables and olive oil"
+  },
+  {
+    "id": "p7",
+    "name": "Caesar Salad",
+    "price": 7.99,
+    "description": "Crisp romaine lettuce with creamy Caesar dressing"
+  },
+  {
+    "id": "p8",
+    "name": "Chocolate Lava Cake",
+    "price": 5.99,
+    "description": "Rich chocolate cake with a molten center"
+  }
+]
