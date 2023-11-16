@@ -27,7 +27,7 @@ export const DropdownMenu = ({
         <div
           role="option"
           aria-selected={index === selectedIndex}
-          key={index}
+          key={item.id}
           onClick={() => updateSelectedItem(item)}
           className={`item-container ${
             index === selectedIndex ? "highlighted" : ""

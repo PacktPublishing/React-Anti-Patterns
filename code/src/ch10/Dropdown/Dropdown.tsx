@@ -1,4 +1,4 @@
-import React, { RefObject } from "react";
+import React, { RefObject, useCallback } from "react";
 import "./Dropdown.css";
 import { Item } from "./types";
 import { useDropdown } from "./useDropdown";
@@ -22,7 +22,7 @@ const Dropdown = () => {
     getAriaAttributes,
   } = useDropdown<Item>(data || []);
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (loading) return <Loading />;
     if (error) return <Error />;
     if (data) {
@@ -35,7 +35,7 @@ const Dropdown = () => {
       );
     }
     return null;
-  };
+  }, [data, error, loading, selectedIndex, updateSelectedItem]);
 
   return (
     <div

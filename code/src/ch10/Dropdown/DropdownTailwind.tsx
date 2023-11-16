@@ -1,12 +1,12 @@
 import "tailwindcss/tailwind.css";
 import { useDropdown } from "./useDropdown";
-import { Item } from "../types";
+import { Item } from "./types";
 import React, { RefObject } from "react";
 import { useService } from "./useService";
 import { fetchUsers } from "./fetchUsers";
 
 const DropdownTailwind = () => {
-  const { data: items, loading, error } = useService<Item[] | null>(fetchUsers);
+  const { data: items } = useService<Item[] | null>(fetchUsers);
 
   const {
     isOpen,
@@ -36,7 +36,7 @@ const DropdownTailwind = () => {
         >
           {(items || []).map((item, index) => (
             <li
-              key={index}
+              key={item.id}
               role="option"
               aria-selected={index === selectedIndex}
               onClick={() => updateSelectedItem(item)}

@@ -9,10 +9,10 @@ const ExpandablePanel = ({ heading, content }: PanelProps) => {
   const { handleKeyDown } = useKeyboard(toggle);
 
   return (
-    <section onKeyDown={handleKeyDown} tabIndex={0}>
+    <article onKeyDown={handleKeyDown} tabIndex={0}>
       <header onClick={toggle}>{heading}</header>
-      {isOpen && <main>{content}</main>}
-    </section>
+      {isOpen && <section>{content}</section>}
+    </article>
   );
 };
 

@@ -8,9 +8,9 @@ export const ExpandablePanel = ({
   content,
 }: PanelProps) => {
   return (
-    <section>
+    <article>
       <header onClick={toggle}>{heading}</header>
-      {isOpen && <main>{content}</main>}
-    </section>
+      {isOpen && <section>{content}</section>}
+    </article>
   );
 };
