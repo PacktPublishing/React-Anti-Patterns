@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "cypress": "^12.17.2",
+    "cypress": "^13.5.1",
     "jest-fetch-mock": "^3.0.3"
   }
 }
