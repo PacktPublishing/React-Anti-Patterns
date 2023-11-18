@@ -1,10 +1,11 @@
-import React from "react";
+import '@testing-library/jest-dom';
 import { render, screen } from "@testing-library/react";
+import React from "react";
 import App from "./App";
 
-test("renders learn react link", () => {
+test("renders application", () => {
   render(<App />);
-  const linkElement = screen.getByText(/My application/i);
-  // @ts-ignore
-  expect(linkElement).toBeInTheDocument();
+
+  const root = screen.getByTestId("applicationContainer");
+  expect(root).toBeInTheDocument();
 });

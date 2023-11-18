@@ -1,7 +1,9 @@
+import React, { RefObject } from "react";
+import '@testing-library/jest-dom';
+import userEvent from "@testing-library/user-event";
+
 import { renderHook, act, render, screen } from "@testing-library/react";
 import { useDropdown } from "./useDropdown";
-import React, { RefObject } from "react";
-import userEvent from "@testing-library/user-event";
 
 const items = [{ text: "Apple" }, { text: "Orange" }, { text: "Banana" }];
 

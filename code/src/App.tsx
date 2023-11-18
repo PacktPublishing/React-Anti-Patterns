@@ -5,7 +5,7 @@ import { ShoppingCartProvider } from "./ch9/CQRS/ShoppingCartContext";
 
 function App() {
   return (
-    <div className="app">
+    <div className="app" data-testid="applicationContainer">
       <ShoppingCartProvider>
         <ShoppingApplicationNew />
       </ShoppingCartProvider>

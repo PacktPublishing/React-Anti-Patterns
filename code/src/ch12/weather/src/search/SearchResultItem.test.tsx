@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import '@testing-library/jest-dom';
 import { SearchResultItem } from "./SearchResultItem";
 import { SearchResultItemType } from "../models/SearchResultItemType";
 

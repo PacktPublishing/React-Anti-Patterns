@@ -1,7 +1,6 @@
 import React, { useContext } from "react";
 import {
   ShoppingCartContext,
-  ShoppingCartProvider,
   useTotalPrice,
 } from "./ShoppingCartContext";
 import { Item } from "./type";

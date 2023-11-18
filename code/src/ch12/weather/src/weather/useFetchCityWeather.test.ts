@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { useFetchCityWeather } from "./useFetchCityWeather";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { SearchResultItemType } from "../models/SearchResultItemType";
@@ -41,6 +42,7 @@ describe("fetchCityWeather function", () => {
 
     await waitFor(() => {
       expect(result.current.cities.length).toEqual(1);
+      // eslint-disable-next-line testing-library/no-wait-for-multiple-assertions
       expect(result.current.cities[0].name).toEqual("Melbourne");
     });
   });

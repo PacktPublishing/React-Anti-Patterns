@@ -1,5 +1,5 @@
+import '@testing-library/jest-dom';
 import { SearchResultItemType } from "./SearchResultItemType";
-import { RemoteSearchResultItem } from "./RemoteSearchResultItem";
 
 describe("SearchResultItemType", () => {
   it("convert the remote type to local", () => {
@@ -18,7 +18,6 @@ describe("SearchResultItemType", () => {
     };
 
     const model = new SearchResultItemType(remote);
-    console.log(model.toString())
 
     expect(model.city).toEqual("Melbourne");
     expect(model.state).toEqual("Florida");

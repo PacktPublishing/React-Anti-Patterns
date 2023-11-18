@@ -1,5 +1,5 @@
 import { useService } from "./useService";
-import { Item } from "../types";
+import { Item } from "./types";
 
 const fetchUsers = async () => {
   const response = await fetch(
@@ -7,7 +7,7 @@ const fetchUsers = async () => {
   );
 
   if (!response.ok) {
-    const error = await response.json();  // assume the response body has error info
+    const error = await response.json(); // assume the response body has error info
     throw new Error(`Error: ${error.error || response.status}`);
   }
 

@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { CityWeather } from "./CityWeather";
 
 describe("CityWeather", () => {
