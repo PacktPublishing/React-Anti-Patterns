@@ -28,7 +28,7 @@ All of the code is organized into folders.
 
 **Following is what you need for this book:**
 
-Build efficient and maintainable React applications with test-driven development and refactoring
+This book is for React developers of all skill levels who share a passion for crafting efficient and maintainable codebases. Whether you're a beginner who wants to establish a solid foundation or an experienced developer looking to refine your skills, this guide offers invaluable insights, practical solutions, and real-world examples to enable you to excel at building scalable, elegant, and high-performing React applications.
 
 With the following software and hardware list you can run all code files present in the book (Chapter 1-13).
 
