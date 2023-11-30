@@ -2,7 +2,7 @@
 
 <a href="https://www.packtpub.com/product/react-anti-patterns/9781805123972"><img src="https://content.packt.com/B21103/cover_image_small.jpg" alt="" height="256px" align="right"></a>
 
-This is the code repository for [React Anti-Patterns](https://www.packtpub.com/product/the-future-of-finance-with-chatgpt-and-power-bi/9781805123347), published byhttps://www.packtpub.com/product/react-anti-patterns/9781805123972 Packt.
+This is the code repository for [React Anti-Patterns](https://www.packtpub.com/product/react-anti-patterns/9781805123972), published by Packt.
 
 **Build efficient and maintainable React applications with test-driven development and refactoring**
 
@@ -48,7 +48,7 @@ With the following software and hardware list you can run all code files present
 * React 18 Design Patterns and Best Practices - Fourth Edition [[Packt]](https://www.packtpub.com/product/react-18-design-patterns-and-best-practices-fourth-edition/9781803233109) [[Amazon]](https://www.amazon.com/React-Design-Patterns-Best-Practices/dp/1803233109)
 
 ## Get to Know the Author
-**Juntao **
+**Juntao**
 is an accomplished software developer with over 15 years of industry experience dedicated to helping others write better code. With a strong passion for crafting maintainable and high-quality code, he has become a trusted resource in the industry.
 As an author, Juntao has shared his expertise through influential books like "Test-Driven Development with React"(2021) and "Maintainable React"(2022).
 With a genuine desire to empower developers and enable them to reach their full potential, he strives to impact the industry positively. By leveraging his extensive experience and passion for writing better code, he supports individuals in honing their skills and achieving success in their software development endeavours.
